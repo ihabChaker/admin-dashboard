@@ -52,9 +52,28 @@ export default function LoginPage() {
       localStorage.setItem('user', JSON.stringify(user));
       toast.success('Login successful');
       router.push('/dashboard');
-    } catch (error) {
-      console.error(error);
-      toast.error('Invalid credentials');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      
+      // Detailed error handling
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message || 'Login failed';
+        
+        if (status === 401) {
+          toast.error('Invalid email or password');
+        } else if (status === 500) {
+          toast.error('Server error. Please contact support or check backend logs.');
+        } else if (status === 400) {
+          toast.error(message);
+        } else {
+          toast.error(`Error: ${message}`);
+        }
+      } else if (error.request) {
+        toast.error('Cannot connect to server. Please check your internet connection.');
+      } else {
+        toast.error('An unexpected error occurred');
+      }
     } finally {
       setIsLoading(false);
     }
