@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Users, Map, MapPin, Trophy, LogOut, HelpCircle, Gem, Mic } from 'lucide-react';
+import { LayoutDashboard, Users, Map, MapPin, Trophy, LogOut, HelpCircle, Gem, Mic, Target, Award, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -68,6 +68,14 @@ export default function DashboardLayout({
             <HelpCircle size={20} />
             Quizzes
           </Link>
+          <Link href="/dashboard/challenges" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+            <Target size={20} />
+            Challenges
+          </Link>
+          <Link href="/dashboard/badges" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+            <Award size={20} />
+            Badges
+          </Link>
           <Link href="/dashboard/treasure-hunts" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
             <Gem size={20} />
             Treasure Hunts
@@ -75,6 +83,10 @@ export default function DashboardLayout({
           <Link href="/dashboard/rewards" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
             <Trophy size={20} />
             Rewards
+          </Link>
+          <Link href="/dashboard/battalion" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+            <Shield size={20} />
+            Historical Data
           </Link>
         </nav>
         <div className="p-4 border-t border-gray-800">

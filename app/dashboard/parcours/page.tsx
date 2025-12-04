@@ -41,7 +41,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Edit } from 'lucide-react';
+import { Plus, Trash2, Edit, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Parcours {
@@ -53,6 +53,17 @@ interface Parcours {
   estimatedDuration: number;
   isPmrAccessible: boolean;
   historicalTheme: string;
+}
+
+interface GPXData {
+  filename: string;
+  gpxFileUrl: string;
+  startPoint: { lat: number; lon: number };
+  endPoint: { lat: number; lon: number };
+  totalDistance: number;
+  elevationGain: number;
+  waypointsCount: number;
+  geoJson: string;
 }
 
 const formSchema = z.object({
@@ -72,6 +83,9 @@ export default function ParcoursPage() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingParcours, setEditingParcours] = useState<Parcours | null>(null);
+  const [gpxFile, setGpxFile] = useState<File | null>(null);
+  const [gpxData, setGpxData] = useState<GPXData | null>(null);
+  const [uploadingGpx, setUploadingGpx] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -138,16 +152,64 @@ export default function ParcoursPage() {
     setOpen(true);
   };
 
+  const handleGpxUpload = async (file: File) => {
+    if (!file) return;
+
+    setUploadingGpx(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await api.post('/parcours/upload-gpx', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const data: GPXData = response.data;
+      setGpxData(data);
+
+      // Auto-fill form with GPX data
+      form.setValue('startingPointLat', data.startPoint.lat);
+      form.setValue('startingPointLon', data.startPoint.lon);
+      form.setValue('distanceKm', data.totalDistance);
+
+      toast.success(`GPX uploaded! ${data.waypointsCount} waypoints, ${data.totalDistance}km`);
+    } catch (error: any) {
+      console.error('GPX upload failed:', error);
+      toast.error(error.response?.data?.message || 'Failed to upload GPX file');
+      setGpxFile(null);
+    } finally {
+      setUploadingGpx(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setGpxFile(file);
+      handleGpxUpload(file);
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      const payload = {
+        ...values,
+        gpxFileUrl: gpxData?.gpxFileUrl,
+        imageUrl: gpxData ? undefined : values.imageUrl,
+      };
+
       if (editingParcours) {
-        await api.put(`/parcours/${editingParcours.id}`, values);
+        await api.put(`/parcours/${editingParcours.id}`, payload);
         toast.success('Parcours updated successfully');
       } else {
-        await api.post('/parcours', values);
+        await api.post('/parcours', payload);
         toast.success('Parcours created successfully');
       }
       setOpen(false);
+      setGpxData(null);
+      setGpxFile(null);
       fetchParcours();
     } catch (error) {
       console.error('Failed to save parcours', error);
@@ -189,6 +251,39 @@ export default function ParcoursPage() {
                 {editingParcours ? 'Update the details of the hiking route.' : 'Create a new hiking route with historical details.'}
               </DialogDescription>
             </DialogHeader>
+
+            {/* GPX Upload Section */}
+            {!editingParcours && (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Upload className="h-5 w-5 text-gray-500" />
+                  <h3 className="font-semibold">Upload GPX File (Optional)</h3>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Upload a GPX file to automatically populate distance and coordinates.
+                </p>
+                <Input
+                  type="file"
+                  accept=".gpx"
+                  onChange={handleFileChange}
+                  disabled={uploadingGpx}
+                  className="cursor-pointer"
+                />
+                {uploadingGpx && (
+                  <p className="text-sm text-blue-600">Uploading and parsing GPX file...</p>
+                )}
+                {gpxData && (
+                  <div className="bg-green-50 border border-green-200 rounded p-3 text-sm space-y-1">
+                    <p className="font-semibold text-green-800">✓ GPX Parsed Successfully</p>
+                    <p>Waypoints: {gpxData.waypointsCount}</p>
+                    <p>Distance: {gpxData.totalDistance} km</p>
+                    <p>Elevation Gain: {gpxData.elevationGain} m</p>
+                    <p className="text-xs text-gray-600">Start: {gpxData.startPoint.lat.toFixed(4)}, {gpxData.startPoint.lon.toFixed(4)}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField

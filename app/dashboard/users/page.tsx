@@ -41,8 +41,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 interface User {
   id: number;
@@ -60,6 +61,7 @@ const formSchema = z.object({
 });
 
 export default function UsersPage() {
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -248,6 +250,14 @@ export default function UsersPage() {
                   <TableCell>{new Date(user.registrationDate).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => router.push(`/dashboard/users/${user.id}`)}
+                        title="View Details"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(user)}>
                         <Edit className="h-4 w-4" />
                       </Button>
