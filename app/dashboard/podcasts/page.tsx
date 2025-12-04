@@ -51,7 +51,7 @@ interface Podcast {
 const formSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
-  durationSeconds: z.coerce.number().min(1, 'Duration must be positive'),
+  durationSeconds: z.number().min(1, 'Duration must be positive'),
   audioFileUrl: z.string().url('Invalid audio URL'),
   narrator: z.string().min(2, 'Narrator name is required'),
   language: z.string().length(2, 'Language code must be 2 characters (e.g., fr)'),
