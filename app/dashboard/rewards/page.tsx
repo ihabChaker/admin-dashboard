@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2, Edit } from "lucide-react";
 import { toast } from "sonner";
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
 
 interface Reward {
   id: number;
@@ -67,6 +68,14 @@ export default function RewardsPage() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingReward, setEditingReward] = useState<Reward | null>(null);
+  const [paginationMeta, setPaginationMeta] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -80,10 +89,13 @@ export default function RewardsPage() {
     },
   });
 
-  const fetchRewards = async () => {
+  const fetchRewards = async (page = 1) => {
     try {
-      const response = await api.get("/rewards");
-      setRewards(response.data);
+      const response = await api.get(`/rewards?page=${page}&limit=10`);
+      setRewards(response.data.data || response.data);
+      if (response.data.meta) {
+        setPaginationMeta(response.data.meta);
+      }
     } catch (error) {
       console.error("Failed to fetch rewards", error);
       toast.error("Failed to fetch rewards");
@@ -151,6 +163,10 @@ export default function RewardsPage() {
       console.error("Failed to delete reward", error);
       toast.error("Failed to delete reward");
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    fetchRewards(page);
   };
 
   if (loading) {
@@ -336,6 +352,7 @@ export default function RewardsPage() {
               )}
             </TableBody>
           </Table>
+          <DataTablePagination meta={paginationMeta} onPageChange={handlePageChange} />
         </CardContent>
       </Card>
     </div>

@@ -43,6 +43,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2, Edit, Gem } from 'lucide-react';
 import { toast } from 'sonner';
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
 
 interface TreasureHunt {
   id: number;
@@ -80,6 +81,14 @@ export default function TreasureHuntPage() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingTreasure, setEditingTreasure] = useState<TreasureHunt | null>(null);
+  const [paginationMeta, setPaginationMeta] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -96,14 +105,17 @@ export default function TreasureHuntPage() {
     },
   });
 
-  const fetchData = async () => {
+  const fetchData = async (page = 1) => {
     try {
       const [treasuresRes, parcoursRes] = await Promise.all([
-        api.get('/treasure-hunts'),
+        api.get(`/treasure-hunts?page=${page}&limit=10`),
         api.get('/parcours'),
       ]);
-      setTreasures(treasuresRes.data);
-      setParcoursList(parcoursRes.data);
+      setTreasures(treasuresRes.data.data || treasuresRes.data);
+      if (treasuresRes.data.meta) {
+        setPaginationMeta(treasuresRes.data.meta);
+      }
+      setParcoursList(parcoursRes.data.data || parcoursRes.data);
     } catch (error) {
       console.error('Failed to fetch data', error);
       toast.error('Failed to fetch data');
@@ -177,6 +189,10 @@ export default function TreasureHuntPage() {
       console.error('Failed to delete treasure hunt', error);
       toast.error('Failed to delete treasure hunt');
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    fetchData(page);
   };
 
   if (loading) {
@@ -410,6 +426,7 @@ export default function TreasureHuntPage() {
               )}
             </TableBody>
           </Table>
+          <DataTablePagination meta={paginationMeta} onPageChange={handlePageChange} />
         </CardContent>
       </Card>
     </div>

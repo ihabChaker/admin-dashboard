@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Trash2, Edit, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
 
 interface POI {
   id: number;
@@ -76,6 +77,14 @@ export default function POIPage() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingPOI, setEditingPOI] = useState<POI | null>(null);
+  const [paginationMeta, setPaginationMeta] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -91,14 +100,17 @@ export default function POIPage() {
     },
   });
 
-  const fetchData = async () => {
+  const fetchData = async (page = 1) => {
     try {
       const [poisRes, parcoursRes] = await Promise.all([
-        api.get('/poi'),
+        api.get(`/poi?page=${page}&limit=10`),
         api.get('/parcours'),
       ]);
-      setPois(poisRes.data);
-      setParcoursList(parcoursRes.data);
+      setPois(poisRes.data.data || poisRes.data);
+      if (poisRes.data.meta) {
+        setPaginationMeta(poisRes.data.meta);
+      }
+      setParcoursList(parcoursRes.data.data || parcoursRes.data);
     } catch (error) {
       console.error('Failed to fetch data', error);
       toast.error('Failed to fetch data');
@@ -170,6 +182,10 @@ export default function POIPage() {
       console.error('Failed to delete POI', error);
       toast.error('Failed to delete POI');
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    fetchData(page);
   };
 
   if (loading) {
@@ -388,6 +404,7 @@ export default function POIPage() {
               )}
             </TableBody>
           </Table>
+          <DataTablePagination meta={paginationMeta} onPageChange={handlePageChange} />
         </CardContent>
       </Card>
     </div>

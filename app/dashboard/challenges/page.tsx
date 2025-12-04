@@ -44,6 +44,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Edit, Trophy } from "lucide-react";
 import { toast } from "sonner";
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
 
 interface Challenge {
   id: number;
@@ -70,6 +71,14 @@ export default function ChallengesPage() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
+  const [paginationMeta, setPaginationMeta] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -83,10 +92,13 @@ export default function ChallengesPage() {
     },
   });
 
-  const fetchChallenges = async () => {
+  const fetchChallenges = async (page = 1) => {
     try {
-      const response = await api.get("/challenges");
-      setChallenges(response.data);
+      const response = await api.get(`/challenges?page=${page}&limit=10`);
+      setChallenges(response.data.data || response.data);
+      if (response.data.meta) {
+        setPaginationMeta(response.data.meta);
+      }
     } catch (error) {
       console.error("Failed to fetch challenges", error);
       toast.error("Failed to fetch challenges");
@@ -154,6 +166,10 @@ export default function ChallengesPage() {
       console.error("Failed to delete challenge", error);
       toast.error("Failed to delete challenge");
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    fetchChallenges(page);
   };
 
   const getChallengeTypeLabel = (type: string) => {
@@ -426,6 +442,7 @@ export default function ChallengesPage() {
               )}
             </TableBody>
           </Table>
+          <DataTablePagination meta={paginationMeta} onPageChange={handlePageChange} />
         </CardContent>
       </Card>
     </div>

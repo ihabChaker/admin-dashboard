@@ -37,6 +37,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, Edit, Shield, Route } from "lucide-react";
 import { toast } from "sonner";
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
 
 interface Battalion {
   id: number;
@@ -87,6 +88,22 @@ export default function BattalionPage() {
   const [openRoute, setOpenRoute] = useState(false);
   const [editingBattalion, setEditingBattalion] = useState<Battalion | null>(null);
   const [editingRoute, setEditingRoute] = useState<BattalionRoute | null>(null);
+  const [battalionPaginationMeta, setBattalionPaginationMeta] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
+  const [routePaginationMeta, setRoutePaginationMeta] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
   const battalionForm = useForm({
     resolver: zodResolver(battalionFormSchema),
@@ -109,15 +126,18 @@ export default function BattalionPage() {
     },
   });
 
-  const fetchData = async () => {
+  const fetchData = async (page = 1) => {
     try {
       setLoading(true);
       const [battalionsRes, parcourRes] = await Promise.all([
-        api.get("/historical/battalions"),
+        api.get(`/historical/battalions?page=${page}&limit=10`),
         api.get("/parcours"),
       ]);
-      setBattalions(battalionsRes.data);
-      setParcoursList(parcourRes.data);
+      setBattalions(battalionsRes.data.data || battalionsRes.data);
+      if (battalionsRes.data.meta) {
+        setBattalionPaginationMeta(battalionsRes.data.meta);
+      }
+      setParcoursList(parcourRes.data.data || parcourRes.data);
       
       // Fetch routes for first battalion if exists
       if (battalionsRes.data.length > 0) {
@@ -243,6 +263,10 @@ export default function BattalionPage() {
       console.error("Failed to delete battalion", error);
       toast.error("Failed to delete battalion");
     }
+  };
+
+  const handleBattalionPageChange = (page: number) => {
+    fetchData(page);
   };
 
   const handleDeleteRoute = async (id: number) => {
@@ -448,6 +472,7 @@ export default function BattalionPage() {
                   )}
                 </TableBody>
               </Table>
+              <DataTablePagination meta={battalionPaginationMeta} onPageChange={handleBattalionPageChange} />
             </CardContent>
           </Card>
         </TabsContent>

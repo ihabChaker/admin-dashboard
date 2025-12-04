@@ -44,6 +44,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2, Edit, HelpCircle, List } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
 
 interface Quiz {
   id: number;
@@ -67,6 +68,14 @@ export default function QuizzesPage() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
+  const [paginationMeta, setPaginationMeta] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -79,10 +88,13 @@ export default function QuizzesPage() {
     },
   });
 
-  const fetchQuizzes = async () => {
+  const fetchQuizzes = async (page = 1) => {
     try {
-      const response = await api.get('/quizzes');
-      setQuizzes(response.data);
+      const response = await api.get(`/quizzes?page=${page}&limit=10`);
+      setQuizzes(response.data.data || response.data);
+      if (response.data.meta) {
+        setPaginationMeta(response.data.meta);
+      }
     } catch (error) {
       console.error('Failed to fetch quizzes', error);
       toast.error('Failed to fetch quizzes');
@@ -139,7 +151,7 @@ export default function QuizzesPage() {
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this quiz?')) return;
-    
+
     try {
       await api.delete(`/quizzes/${id}`);
       toast.success('Quiz deleted successfully');
@@ -150,7 +162,9 @@ export default function QuizzesPage() {
     }
   };
 
-  if (loading) {
+  const handlePageChange = (page: number) => {
+    fetchQuizzes(page);
+  };  if (loading) {
     return <div className="p-8">Loading quizzes...</div>;
   }
 
@@ -329,6 +343,7 @@ export default function QuizzesPage() {
               )}
             </TableBody>
           </Table>
+          <DataTablePagination meta={paginationMeta} onPageChange={handlePageChange} />
         </CardContent>
       </Card>
     </div>

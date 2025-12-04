@@ -43,6 +43,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2, Edit, Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
 
 interface Parcours {
   id: number;
@@ -78,8 +79,16 @@ const formSchema = z.object({
   startingPointLon: z.coerce.number().min(-180).max(180),
 });
 
-export default function ParcoursPage() {
+export default function ParcoursManagementPage() {
   const [parcours, setParcours] = useState<Parcours[]>([]);
+  const [paginationMeta, setPaginationMeta] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingParcours, setEditingParcours] = useState<Parcours | null>(null);
@@ -102,10 +111,12 @@ export default function ParcoursPage() {
     },
   });
 
-  const fetchParcours = async () => {
+  const fetchParcours = async (page = 1) => {
     try {
-      const response = await api.get('/parcours');
-      setParcours(response.data);
+      setLoading(true);
+      const response = await api.get(`/parcours?page=${page}&limit=10`);
+      setParcours(response.data.data);
+      setPaginationMeta(response.data.meta);
     } catch (error) {
       console.error('Failed to fetch parcours', error);
       toast.error('Failed to fetch parcours');
@@ -117,6 +128,10 @@ export default function ParcoursPage() {
   useEffect(() => {
     fetchParcours();
   }, []);
+
+  const handlePageChange = (page: number) => {
+    fetchParcours(page);
+  };
 
   useEffect(() => {
     if (!open) {
@@ -197,7 +212,6 @@ export default function ParcoursPage() {
       const payload = {
         ...values,
         gpxFileUrl: gpxData?.gpxFileUrl,
-        imageUrl: gpxData ? undefined : values.imageUrl,
       };
 
       if (editingParcours) {
@@ -497,6 +511,7 @@ export default function ParcoursPage() {
               )}
             </TableBody>
           </Table>
+          <DataTablePagination meta={paginationMeta} onPageChange={handlePageChange} />
         </CardContent>
       </Card>
     </div>

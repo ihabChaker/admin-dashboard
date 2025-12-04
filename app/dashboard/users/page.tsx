@@ -44,6 +44,7 @@ import {
 import { Edit, Trash2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
 
 interface User {
   id: number;
@@ -66,6 +67,14 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [paginationMeta, setPaginationMeta] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -76,9 +85,13 @@ export default function UsersPage() {
     },
   });
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (page = 1) => {
     try {
-      const response = await api.get('/users');
+      const response = await api.get(`/users?page=${page}&limit=10`);
+      setUsers(response.data.data || response.data);
+      if (response.data.meta) {
+        setPaginationMeta(response.data.meta);
+      }
       setUsers(response.data);
     } catch (error) {
       console.error('Failed to fetch users', error);
@@ -120,6 +133,10 @@ export default function UsersPage() {
       console.error('Failed to delete user', error);
       toast.error('Failed to delete user');
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    fetchUsers(page);
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -270,6 +287,7 @@ export default function UsersPage() {
               ))}
             </TableBody>
           </Table>
+          <DataTablePagination meta={paginationMeta} onPageChange={handlePageChange} />
         </CardContent>
       </Card>
     </div>
