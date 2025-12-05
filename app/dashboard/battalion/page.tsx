@@ -34,10 +34,24 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Edit, Shield, Route } from "lucide-react";
+import { Plus, Trash2, Edit, Shield } from "lucide-react";
 import { toast } from "sonner";
-import { DataTablePagination } from '@/components/ui/data-table-pagination';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 interface Battalion {
   id: number;
@@ -126,22 +140,23 @@ export default function BattalionPage() {
     },
   });
 
-  const fetchData = async (page = 1) => {
+  const fetchData = async (page = 1, limit = battalionPaginationMeta.limit) => {
     try {
       setLoading(true);
       const [battalionsRes, parcourRes] = await Promise.all([
-        api.get(`/historical/battalions?page=${page}&limit=10`),
+        api.get(`/historical/battalions?page=${page}&limit=${limit}`),
         api.get("/parcours"),
       ]);
-      setBattalions(battalionsRes.data.data || battalionsRes.data);
+      const battalionData = battalionsRes.data.data || battalionsRes.data;
+      setBattalions(battalionData);
       if (battalionsRes.data.meta) {
         setBattalionPaginationMeta(battalionsRes.data.meta);
       }
       setParcoursList(parcourRes.data.data || parcourRes.data);
       
-      // Fetch routes for first battalion if exists
-      if (battalionsRes.data.length > 0) {
-        await fetchAllRoutes();
+      // Fetch routes for all battalions if exists
+      if (battalionData.length > 0) {
+        await fetchAllRoutesForBattalions(battalionData);
       }
     } catch (error) {
       console.error("Failed to fetch data", error);
@@ -151,13 +166,21 @@ export default function BattalionPage() {
     }
   };
 
-  const fetchAllRoutes = async () => {
+  const fetchAllRoutesForBattalions = async (battalionList: Battalion[]) => {
     try {
-      // For now, fetch routes for all battalions
+      // Fetch routes for all battalions
       const allRoutes: BattalionRoute[] = [];
-      for (const battalion of battalions) {
-        const res = await api.get(`/historical/routes/battalion/${battalion.id}`);
-        allRoutes.push(...res.data);
+      for (const battalion of battalionList) {
+        try {
+          const res = await api.get(`/historical/routes/battalion/${battalion.id}`);
+          const routeData = res.data.data || res.data;
+          if (Array.isArray(routeData)) {
+            allRoutes.push(...routeData);
+          }
+        } catch (err) {
+          // Continue if a single battalion's routes fail
+          console.warn(`Failed to fetch routes for battalion ${battalion.id}`);
+        }
       }
       setRoutes(allRoutes);
     } catch (error) {
@@ -165,8 +188,15 @@ export default function BattalionPage() {
     }
   };
 
+  const fetchAllRoutes = async () => {
+    // Refetch routes for current battalions
+    if (battalions.length > 0) {
+      await fetchAllRoutesForBattalions(battalions);
+    }
+  };
+
   useEffect(() => {
-    fetchData();
+    fetchData(1, 10);
   }, []);
 
   useEffect(() => {
@@ -266,7 +296,12 @@ export default function BattalionPage() {
   };
 
   const handleBattalionPageChange = (page: number) => {
-    fetchData(page);
+    fetchData(page, battalionPaginationMeta.limit);
+  };
+
+  const handleBattalionPageSizeChange = (pageSize: number) => {
+    setBattalionPaginationMeta({ ...battalionPaginationMeta, limit: pageSize, page: 1 });
+    fetchData(1, pageSize);
   };
 
   const handleDeleteRoute = async (id: number) => {
@@ -411,6 +446,30 @@ export default function BattalionPage() {
               <CardTitle>All Battalions ({battalions.length})</CardTitle>
             </CardHeader>
             <CardContent>
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {Math.min((battalionPaginationMeta.page - 1) * battalionPaginationMeta.limit + 1, battalionPaginationMeta.total)} to{' '}
+                  {Math.min(battalionPaginationMeta.page * battalionPaginationMeta.limit, battalionPaginationMeta.total)} of {battalionPaginationMeta.total} results
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Rows per page:</span>
+                  <Select
+                    value={battalionPaginationMeta.limit.toString()}
+                    onValueChange={(value) => handleBattalionPageSizeChange(Number(value))}
+                  >
+                    <SelectTrigger className="w-[70px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5</SelectItem>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -472,7 +531,35 @@ export default function BattalionPage() {
                   )}
                 </TableBody>
               </Table>
-              <DataTablePagination meta={battalionPaginationMeta} onPageChange={handleBattalionPageChange} />
+              <div className="flex items-center justify-center pt-4">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => battalionPaginationMeta.hasPreviousPage && handleBattalionPageChange(battalionPaginationMeta.page - 1)}
+                        className={!battalionPaginationMeta.hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    {Array.from({ length: battalionPaginationMeta.totalPages }, (_, i) => i + 1).map((pageNum) => (
+                      <PaginationItem key={pageNum}>
+                        <PaginationLink
+                          onClick={() => handleBattalionPageChange(pageNum)}
+                          isActive={pageNum === battalionPaginationMeta.page}
+                          className="cursor-pointer"
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => battalionPaginationMeta.hasNextPage && handleBattalionPageChange(battalionPaginationMeta.page + 1)}
+                        className={!battalionPaginationMeta.hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

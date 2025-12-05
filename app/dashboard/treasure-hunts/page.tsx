@@ -41,9 +41,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Edit, Gem } from 'lucide-react';
+import { Plus, Trash2, Edit, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
-import { DataTablePagination } from '@/components/ui/data-table-pagination';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 interface TreasureHunt {
   id: number;
@@ -105,10 +112,10 @@ export default function TreasureHuntPage() {
     },
   });
 
-  const fetchData = async (page = 1) => {
+  const fetchData = async (page = 1, limit = paginationMeta.limit) => {
     try {
       const [treasuresRes, parcoursRes] = await Promise.all([
-        api.get(`/treasure-hunts?page=${page}&limit=10`),
+        api.get(`/treasure-hunts?page=${page}&limit=${limit}`),
         api.get('/parcours'),
       ]);
       setTreasures(treasuresRes.data.data || treasuresRes.data);
@@ -125,7 +132,7 @@ export default function TreasureHuntPage() {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(1, 10);
   }, []);
 
   useEffect(() => {
@@ -192,7 +199,12 @@ export default function TreasureHuntPage() {
   };
 
   const handlePageChange = (page: number) => {
-    fetchData(page);
+    fetchData(page, paginationMeta.limit);
+  };
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setPaginationMeta({ ...paginationMeta, limit: pageSize, page: 1 });
+    fetchData(1, pageSize);
   };
 
   if (loading) {
@@ -375,6 +387,30 @@ export default function TreasureHuntPage() {
           <CardTitle>All Treasure Hunts</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {Math.min((paginationMeta.page - 1) * paginationMeta.limit + 1, paginationMeta.total)} to{' '}
+              {Math.min(paginationMeta.page * paginationMeta.limit, paginationMeta.total)} of {paginationMeta.total} results
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Rows per page:</span>
+              <Select
+                value={paginationMeta.limit.toString()}
+                onValueChange={(value) => handlePageSizeChange(Number(value))}
+              >
+                <SelectTrigger className="w-[70px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -426,7 +462,35 @@ export default function TreasureHuntPage() {
               )}
             </TableBody>
           </Table>
-          <DataTablePagination meta={paginationMeta} onPageChange={handlePageChange} />
+          <div className="flex items-center justify-center pt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => paginationMeta.hasPreviousPage && handlePageChange(paginationMeta.page - 1)}
+                    className={!paginationMeta.hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                {Array.from({ length: paginationMeta.totalPages }, (_, i) => i + 1).map((pageNum) => (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(pageNum)}
+                      isActive={pageNum === paginationMeta.page}
+                      className="cursor-pointer"
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => paginationMeta.hasNextPage && handlePageChange(paginationMeta.page + 1)}
+                    className={!paginationMeta.hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </CardContent>
       </Card>
     </div>

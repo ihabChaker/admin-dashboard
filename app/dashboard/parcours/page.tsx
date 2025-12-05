@@ -41,9 +41,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Edit, Upload } from 'lucide-react';
+import { Plus, Trash2, Edit, Map, Upload } from 'lucide-react';
 import { toast } from 'sonner';
-import { DataTablePagination } from '@/components/ui/data-table-pagination';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 interface Parcours {
   id: number;
@@ -111,10 +118,10 @@ export default function ParcoursManagementPage() {
     },
   });
 
-  const fetchParcours = async (page = 1) => {
+  const fetchParcours = async (page = 1, limit = paginationMeta.limit) => {
     try {
       setLoading(true);
-      const response = await api.get(`/parcours?page=${page}&limit=10`);
+      const response = await api.get(`/parcours?page=${page}&limit=${limit}`);
       setParcours(response.data.data);
       setPaginationMeta(response.data.meta);
     } catch (error) {
@@ -126,11 +133,16 @@ export default function ParcoursManagementPage() {
   };
 
   useEffect(() => {
-    fetchParcours();
+    fetchParcours(1, 10);
   }, []);
 
   const handlePageChange = (page: number) => {
-    fetchParcours(page);
+    fetchParcours(page, paginationMeta.limit);
+  };
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setPaginationMeta({ ...paginationMeta, limit: pageSize, page: 1 });
+    fetchParcours(1, pageSize);
   };
 
   useEffect(() => {
@@ -452,6 +464,30 @@ export default function ParcoursManagementPage() {
           <CardTitle>All Parcours</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {Math.min((paginationMeta.page - 1) * paginationMeta.limit + 1, paginationMeta.total)} to{' '}
+              {Math.min(paginationMeta.page * paginationMeta.limit, paginationMeta.total)} of {paginationMeta.total} results
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Rows per page:</span>
+              <Select
+                value={paginationMeta.limit.toString()}
+                onValueChange={(value) => handlePageSizeChange(Number(value))}
+              >
+                <SelectTrigger className="w-[70px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -511,7 +547,35 @@ export default function ParcoursManagementPage() {
               )}
             </TableBody>
           </Table>
-          <DataTablePagination meta={paginationMeta} onPageChange={handlePageChange} />
+          <div className="flex items-center justify-center pt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => paginationMeta.hasPreviousPage && handlePageChange(paginationMeta.page - 1)}
+                    className={!paginationMeta.hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                {Array.from({ length: paginationMeta.totalPages }, (_, i) => i + 1).map((pageNum) => (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(pageNum)}
+                      isActive={pageNum === paginationMeta.page}
+                      className="cursor-pointer"
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => paginationMeta.hasNextPage && handlePageChange(paginationMeta.page + 1)}
+                    className={!paginationMeta.hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </CardContent>
       </Card>
     </div>

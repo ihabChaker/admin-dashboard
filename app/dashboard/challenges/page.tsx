@@ -44,7 +44,14 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Edit, Trophy } from "lucide-react";
 import { toast } from "sonner";
-import { DataTablePagination } from '@/components/ui/data-table-pagination';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Challenge {
   id: number;
@@ -92,9 +99,9 @@ export default function ChallengesPage() {
     },
   });
 
-  const fetchChallenges = async (page = 1) => {
+  const fetchChallenges = async (page = 1, limit = paginationMeta.limit) => {
     try {
-      const response = await api.get(`/challenges?page=${page}&limit=10`);
+      const response = await api.get(`/challenges?page=${page}&limit=${limit}`);
       setChallenges(response.data.data || response.data);
       if (response.data.meta) {
         setPaginationMeta(response.data.meta);
@@ -108,7 +115,7 @@ export default function ChallengesPage() {
   };
 
   useEffect(() => {
-    fetchChallenges();
+    fetchChallenges(1, 10);
   }, []);
 
   useEffect(() => {
@@ -169,7 +176,12 @@ export default function ChallengesPage() {
   };
 
   const handlePageChange = (page: number) => {
-    fetchChallenges(page);
+    fetchChallenges(page, paginationMeta.limit);
+  };
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setPaginationMeta({ ...paginationMeta, limit: pageSize, page: 1 });
+    fetchChallenges(1, pageSize);
   };
 
   const getChallengeTypeLabel = (type: string) => {
@@ -362,6 +374,30 @@ export default function ChallengesPage() {
           <CardTitle>All Challenges ({challenges.length})</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {Math.min((paginationMeta.page - 1) * paginationMeta.limit + 1, paginationMeta.total)} to{' '}
+              {Math.min(paginationMeta.page * paginationMeta.limit, paginationMeta.total)} of {paginationMeta.total} results
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Rows per page:</span>
+              <Select
+                value={paginationMeta.limit.toString()}
+                onValueChange={(value) => handlePageSizeChange(Number(value))}
+              >
+                <SelectTrigger className="w-[70px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -404,7 +440,7 @@ export default function ChallengesPage() {
                     <TableCell className="font-medium">{challenge.pointsReward}</TableCell>
                     <TableCell>
                       <span className="text-sm font-medium">
-                        {challenge.difficultyMultiplier.toFixed(1)}x
+                        {Number(challenge.difficultyMultiplier).toFixed(1)}x
                       </span>
                     </TableCell>
                     <TableCell>
@@ -442,7 +478,35 @@ export default function ChallengesPage() {
               )}
             </TableBody>
           </Table>
-          <DataTablePagination meta={paginationMeta} onPageChange={handlePageChange} />
+          <div className="flex items-center justify-center pt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => paginationMeta.hasPreviousPage && handlePageChange(paginationMeta.page - 1)}
+                    className={!paginationMeta.hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                {Array.from({ length: paginationMeta.totalPages }, (_, i) => i + 1).map((pageNum) => (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(pageNum)}
+                      isActive={pageNum === paginationMeta.page}
+                      className="cursor-pointer"
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => paginationMeta.hasNextPage && handlePageChange(paginationMeta.page + 1)}
+                    className={!paginationMeta.hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </CardContent>
       </Card>
     </div>

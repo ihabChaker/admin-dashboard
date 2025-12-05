@@ -44,7 +44,7 @@ import {
 import { Edit, Trash2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { DataTablePagination } from '@/components/ui/data-table-pagination';
+import { SmartPagination } from '@/components/smart-pagination';
 
 interface User {
   id: number;
@@ -85,24 +85,38 @@ export default function UsersPage() {
     },
   });
 
-  const fetchUsers = async (page = 1) => {
+  const fetchUsers = async (page = 1, limit = 10) => {
     try {
-      const response = await api.get(`/users?page=${page}&limit=10`);
-      setUsers(response.data.data || response.data);
-      if (response.data.meta) {
+      setLoading(true);
+      const response = await api.get(`/users?page=${page}&limit=${limit}`);
+      
+      // Handle response with meta
+      if (response.data.meta && response.data.data) {
+        setUsers(response.data.data);
         setPaginationMeta(response.data.meta);
+      } else if (Array.isArray(response.data)) {
+        // Fallback for old API format (shouldn't happen anymore)
+        setUsers(response.data);
+        setPaginationMeta({
+          page: 1,
+          limit: response.data.length,
+          total: response.data.length,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        });
       }
-      setUsers(response.data);
     } catch (error) {
       console.error('Failed to fetch users', error);
       toast.error('Failed to fetch users');
+      setUsers([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(1, 10);
   }, []);
 
   useEffect(() => {
@@ -136,7 +150,12 @@ export default function UsersPage() {
   };
 
   const handlePageChange = (page: number) => {
-    fetchUsers(page);
+    fetchUsers(page, paginationMeta.limit);
+  };
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setPaginationMeta({ ...paginationMeta, limit: pageSize, page: 1 });
+    fetchUsers(1, pageSize);
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -232,6 +251,30 @@ export default function UsersPage() {
           <CardTitle>All Users</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {Math.min((paginationMeta.page - 1) * paginationMeta.limit + 1, paginationMeta.total)} to{' '}
+              {Math.min(paginationMeta.page * paginationMeta.limit, paginationMeta.total)} of {paginationMeta.total} results
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Rows per page:</span>
+              <Select
+                value={paginationMeta.limit.toString()}
+                onValueChange={(value) => handlePageSizeChange(Number(value))}
+              >
+                <SelectTrigger className="w-[70px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -244,7 +287,14 @@ export default function UsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                    No users found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.id}</TableCell>
                   <TableCell>
@@ -284,10 +334,17 @@ export default function UsersPage() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ))
+              )}
             </TableBody>
           </Table>
-          <DataTablePagination meta={paginationMeta} onPageChange={handlePageChange} />
+          <SmartPagination
+            currentPage={paginationMeta.page}
+            totalPages={paginationMeta.totalPages}
+            onPageChange={handlePageChange}
+            hasNextPage={paginationMeta.hasNextPage}
+            hasPreviousPage={paginationMeta.hasPreviousPage}
+          />
         </CardContent>
       </Card>
     </div>

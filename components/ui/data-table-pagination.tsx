@@ -9,6 +9,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface PaginationMeta {
   page: number;
@@ -22,10 +29,11 @@ interface PaginationMeta {
 interface DataTablePaginationProps {
   meta: PaginationMeta;
   onPageChange: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
-export function DataTablePagination({ meta, onPageChange }: DataTablePaginationProps) {
-  const { page, totalPages, hasNextPage, hasPreviousPage } = meta;
+export function DataTablePagination({ meta, onPageChange, onPageSizeChange }: DataTablePaginationProps) {
+  const { page, totalPages, hasNextPage, hasPreviousPage, limit } = meta;
 
   const renderPageNumbers = () => {
     const pages: (number | string)[] = [];
@@ -68,10 +76,33 @@ export function DataTablePagination({ meta, onPageChange }: DataTablePaginationP
   };
 
   return (
-    <div className="flex items-center justify-between px-2 py-4">
-      <div className="text-sm text-muted-foreground">
-        Showing {Math.min((page - 1) * meta.limit + 1, meta.total)} to{' '}
-        {Math.min(page * meta.limit, meta.total)} of {meta.total} results
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4">
+      <div className="flex items-center gap-4">
+        <div className="text-sm text-muted-foreground">
+          Showing {Math.min((page - 1) * meta.limit + 1, meta.total)} to{' '}
+          {Math.min(page * meta.limit, meta.total)} of {meta.total} results
+        </div>
+        
+        {onPageSizeChange && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Rows per page:</span>
+            <Select
+              value={limit.toString()}
+              onValueChange={(value) => onPageSizeChange(Number(value))}
+            >
+              <SelectTrigger className="w-[70px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
       
       <Pagination>
@@ -84,7 +115,7 @@ export function DataTablePagination({ meta, onPageChange }: DataTablePaginationP
           </PaginationItem>
 
           {renderPageNumbers().map((pageNum, index) => (
-            <PaginationItem key={index}>
+            <PaginationItem key={`page-${index}-${pageNum}`}>
               {pageNum === '...' ? (
                 <PaginationEllipsis />
               ) : (
