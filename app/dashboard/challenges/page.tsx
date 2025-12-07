@@ -67,7 +67,12 @@ interface Challenge {
 const formSchema = z.object({
   name: z.string().min(1, "Name is required").max(200, "Name too long"),
   description: z.string().optional(),
-  challengeType: z.enum(["weighted_backpack", "period_clothing", "distance", "time"]),
+  challengeType: z.enum([
+    "weighted_backpack",
+    "period_clothing",
+    "distance",
+    "time",
+  ]),
   pointsReward: z.coerce.number().int().min(1, "Points must be positive"),
   difficultyMultiplier: z.coerce.number().min(0.1).max(10),
   isActive: z.boolean().default(true),
@@ -77,7 +82,9 @@ export default function ChallengesPage() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
+  const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(
+    null
+  );
   const [paginationMeta, setPaginationMeta] = useState({
     page: 1,
     limit: 10,
@@ -137,7 +144,11 @@ export default function ChallengesPage() {
     form.reset({
       name: challenge.name,
       description: challenge.description || "",
-      challengeType: challenge.challengeType as any,
+      challengeType: challenge.challengeType as
+        | "weighted_backpack"
+        | "period_clothing"
+        | "distance"
+        | "time",
       pointsReward: challenge.pointsReward,
       difficultyMultiplier: challenge.difficultyMultiplier,
       isActive: challenge.isActive,
@@ -158,7 +169,11 @@ export default function ChallengesPage() {
       fetchChallenges();
     } catch (error) {
       console.error("Failed to save challenge", error);
-      toast.error(editingChallenge ? "Failed to update challenge" : "Failed to create challenge");
+      toast.error(
+        editingChallenge
+          ? "Failed to update challenge"
+          : "Failed to create challenge"
+      );
     }
   };
 
@@ -216,7 +231,9 @@ export default function ChallengesPage() {
             <Trophy className="h-8 w-8 text-yellow-600" />
             Challenges Management
           </h1>
-          <p className="text-gray-600 mt-1">Create and manage physical challenges for users</p>
+          <p className="text-gray-600 mt-1">
+            Create and manage physical challenges for users
+          </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -226,10 +243,12 @@ export default function ChallengesPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>{editingChallenge ? "Edit Challenge" : "Add New Challenge"}</DialogTitle>
+              <DialogTitle>
+                {editingChallenge ? "Edit Challenge" : "Add New Challenge"}
+              </DialogTitle>
               <DialogDescription>
-                {editingChallenge 
-                  ? "Update the challenge details." 
+                {editingChallenge
+                  ? "Update the challenge details."
                   : "Create a new physical challenge for users to complete during their activities."}
               </DialogDescription>
             </DialogHeader>
@@ -245,7 +264,10 @@ export default function ChallengesPage() {
                     <FormItem>
                       <FormLabel>Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., 10km March with weighted backpack" {...field} />
+                        <Input
+                          placeholder="e.g., 10km March with weighted backpack"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -258,10 +280,10 @@ export default function ChallengesPage() {
                     <FormItem>
                       <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Textarea 
+                        <Textarea
                           placeholder="Describe the challenge requirements..."
                           rows={3}
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -284,9 +306,15 @@ export default function ChallengesPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="weighted_backpack">Weighted Backpack</SelectItem>
-                          <SelectItem value="period_clothing">Period Clothing</SelectItem>
-                          <SelectItem value="distance">Distance Goal</SelectItem>
+                          <SelectItem value="weighted_backpack">
+                            Weighted Backpack
+                          </SelectItem>
+                          <SelectItem value="period_clothing">
+                            Period Clothing
+                          </SelectItem>
+                          <SelectItem value="distance">
+                            Distance Goal
+                          </SelectItem>
                           <SelectItem value="time">Time Goal</SelectItem>
                         </SelectContent>
                       </Select>
@@ -308,7 +336,9 @@ export default function ChallengesPage() {
                             placeholder="100"
                             {...field}
                             value={field.value as number}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={(e) =>
+                              field.onChange(parseFloat(e.target.value) || 0)
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -330,7 +360,9 @@ export default function ChallengesPage() {
                             placeholder="1.0"
                             {...field}
                             value={field.value as number}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 1)}
+                            onChange={(e) =>
+                              field.onChange(parseFloat(e.target.value) || 1)
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -344,7 +376,9 @@ export default function ChallengesPage() {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
-                        <FormLabel className="text-base">Active Status</FormLabel>
+                        <FormLabel className="text-base">
+                          Active Status
+                        </FormLabel>
                         <div className="text-sm text-gray-500">
                           Users can see and start active challenges
                         </div>
@@ -376,11 +410,22 @@ export default function ChallengesPage() {
         <CardContent>
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm text-muted-foreground">
-              Showing {Math.min((paginationMeta.page - 1) * paginationMeta.limit + 1, paginationMeta.total)} to{' '}
-              {Math.min(paginationMeta.page * paginationMeta.limit, paginationMeta.total)} of {paginationMeta.total} results
+              Showing{" "}
+              {Math.min(
+                (paginationMeta.page - 1) * paginationMeta.limit + 1,
+                paginationMeta.total
+              )}{" "}
+              to{" "}
+              {Math.min(
+                paginationMeta.page * paginationMeta.limit,
+                paginationMeta.total
+              )}{" "}
+              of {paginationMeta.total} results
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Rows per page:</span>
+              <span className="text-sm text-muted-foreground">
+                Rows per page:
+              </span>
               <Select
                 value={paginationMeta.limit.toString()}
                 onValueChange={(value) => handlePageSizeChange(Number(value))}
@@ -423,7 +468,9 @@ export default function ChallengesPage() {
               ) : (
                 challenges.map((challenge) => (
                   <TableRow key={challenge.id}>
-                    <TableCell className="font-medium">{challenge.id}</TableCell>
+                    <TableCell className="font-medium">
+                      {challenge.id}
+                    </TableCell>
                     <TableCell>
                       <div className="font-medium">{challenge.name}</div>
                       {challenge.description && (
@@ -433,11 +480,17 @@ export default function ChallengesPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getChallengeTypeColor(challenge.challengeType)}`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getChallengeTypeColor(
+                          challenge.challengeType
+                        )}`}
+                      >
                         {getChallengeTypeLabel(challenge.challengeType)}
                       </span>
                     </TableCell>
-                    <TableCell className="font-medium">{challenge.pointsReward}</TableCell>
+                    <TableCell className="font-medium">
+                      {challenge.pointsReward}
+                    </TableCell>
                     <TableCell>
                       <span className="text-sm font-medium">
                         {Number(challenge.difficultyMultiplier).toFixed(1)}x
@@ -456,9 +509,9 @@ export default function ChallengesPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleEdit(challenge)}
                         >
                           <Edit className="h-4 w-4" />
@@ -483,11 +536,21 @@ export default function ChallengesPage() {
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
-                    onClick={() => paginationMeta.hasPreviousPage && handlePageChange(paginationMeta.page - 1)}
-                    className={!paginationMeta.hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    onClick={() =>
+                      paginationMeta.hasPreviousPage &&
+                      handlePageChange(paginationMeta.page - 1)
+                    }
+                    className={
+                      !paginationMeta.hasPreviousPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
                   />
                 </PaginationItem>
-                {Array.from({ length: paginationMeta.totalPages }, (_, i) => i + 1).map((pageNum) => (
+                {Array.from(
+                  { length: paginationMeta.totalPages },
+                  (_, i) => i + 1
+                ).map((pageNum) => (
                   <PaginationItem key={pageNum}>
                     <PaginationLink
                       onClick={() => handlePageChange(pageNum)}
@@ -500,8 +563,15 @@ export default function ChallengesPage() {
                 ))}
                 <PaginationItem>
                   <PaginationNext
-                    onClick={() => paginationMeta.hasNextPage && handlePageChange(paginationMeta.page + 1)}
-                    className={!paginationMeta.hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    onClick={() =>
+                      paginationMeta.hasNextPage &&
+                      handlePageChange(paginationMeta.page + 1)
+                    }
+                    className={
+                      !paginationMeta.hasNextPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
                   />
                 </PaginationItem>
               </PaginationContent>

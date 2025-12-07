@@ -1,10 +1,20 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import api from '@/lib/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Map, Trophy, Activity, Award, Target, TrendingUp, Calendar } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import api from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Users,
+  Map,
+  Trophy,
+  Activity,
+  Award,
+  Target,
+  TrendingUp,
+  Calendar,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface DashboardStats {
   users: {
@@ -43,21 +53,23 @@ interface RecentActivity {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [statsRes, activitiesRes] = await Promise.all([
-          api.get('/admin/stats'),
-          api.get('/admin/activities/recent').catch(() => ({ data: [] })),
+          api.get("/admin/stats"),
+          api.get("/admin/activities/recent").catch(() => ({ data: [] })),
         ]);
-        
+
         setStats(statsRes.data);
         setRecentActivities(activitiesRes.data || []);
       } catch (error) {
-        console.error('Failed to fetch dashboard data', error);
+        console.error("Failed to fetch dashboard data", error);
       } finally {
         setLoading(false);
       }
@@ -70,9 +82,11 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-        <p className="text-gray-600 mt-1">Welcome to the HistoRando admin panel</p>
+        <p className="text-gray-600 mt-1">
+          Welcome to the HistoRando admin panel
+        </p>
       </div>
-      
+
       {/* Top Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
@@ -82,7 +96,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {loading ? '...' : stats?.users?.total || 0}
+              {loading ? "..." : stats?.users?.total || 0}
             </div>
             <p className="text-xs text-muted-foreground">
               {stats?.users?.newThisMonth || 0} new this month
@@ -92,12 +106,14 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Parcours</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Parcours
+            </CardTitle>
             <Map className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {loading ? '...' : stats?.parcours?.total || 0}
+              {loading ? "..." : stats?.parcours?.total || 0}
             </div>
             <p className="text-xs text-muted-foreground">
               {stats?.parcours?.published || 0} published
@@ -107,12 +123,14 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Activities</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Activities
+            </CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {loading ? '...' : stats?.activities?.totalActivities || 0}
+              {loading ? "..." : stats?.activities?.totalActivities || 0}
             </div>
             <p className="text-xs text-muted-foreground">
               {stats?.activities?.totalDistance?.toFixed(1) || 0} km total
@@ -127,7 +145,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {loading ? '...' : stats?.rewards?.total || 0}
+              {loading ? "..." : stats?.rewards?.total || 0}
             </div>
             <p className="text-xs text-muted-foreground">
               {stats?.rewards?.redeemed || 0} redeemed
@@ -145,7 +163,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {loading ? '...' : stats?.users?.activeThisWeek || 0}
+              {loading ? "..." : stats?.users?.activeThisWeek || 0}
             </div>
             <p className="text-xs text-muted-foreground">Active this week</p>
           </CardContent>
@@ -153,12 +171,16 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Distance</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Distance
+            </CardTitle>
             <Target className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {loading ? '...' : stats?.activities?.totalDistance?.toFixed(1) || 0}
+              {loading
+                ? "..."
+                : stats?.activities?.totalDistance?.toFixed(1) || 0}
             </div>
             <p className="text-xs text-muted-foreground">Kilometers traveled</p>
           </CardContent>
@@ -171,9 +193,11 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {loading ? '...' : 'Online'}
+              {loading ? "..." : "Online"}
             </div>
-            <p className="text-xs text-muted-foreground">All systems operational</p>
+            <p className="text-xs text-muted-foreground">
+              All systems operational
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -207,7 +231,8 @@ export default function DashboardPage() {
                         {activity.user?.username || `User #${activity.userId}`}
                       </p>
                       <p className="text-sm text-gray-600 truncate">
-                        {activity.parcours?.name || `Parcours #${activity.parcoursId}`}
+                        {activity.parcours?.name ||
+                          `Parcours #${activity.parcoursId}`}
                       </p>
                       <p className="text-xs text-gray-500">
                         <Calendar className="h-3 w-3 inline mr-1" />
@@ -227,34 +252,42 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
-              <a
+              <Link
                 href="/dashboard/parcours"
                 className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer"
               >
                 <Map className="h-8 w-8 text-blue-600 mb-2" />
-                <span className="text-sm font-medium text-gray-700">Add Parcours</span>
-              </a>
-              <a
+                <span className="text-sm font-medium text-gray-700">
+                  Add Parcours
+                </span>
+              </Link>
+              <Link
                 href="/dashboard/challenges"
                 className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-yellow-500 hover:bg-yellow-50 transition-all cursor-pointer"
               >
                 <Trophy className="h-8 w-8 text-yellow-600 mb-2" />
-                <span className="text-sm font-medium text-gray-700">Add Challenge</span>
-              </a>
-              <a
+                <span className="text-sm font-medium text-gray-700">
+                  Add Challenge
+                </span>
+              </Link>
+              <Link
                 href="/dashboard/badges"
                 className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-purple-500 hover:bg-purple-50 transition-all cursor-pointer"
               >
                 <Award className="h-8 w-8 text-purple-600 mb-2" />
-                <span className="text-sm font-medium text-gray-700">Add Badge</span>
-              </a>
-              <a
+                <span className="text-sm font-medium text-gray-700">
+                  Add Badge
+                </span>
+              </Link>
+              <Link
                 href="/dashboard/users"
                 className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50 transition-all cursor-pointer"
               >
                 <Users className="h-8 w-8 text-green-600 mb-2" />
-                <span className="text-sm font-medium text-gray-700">Manage Users</span>
-              </a>
+                <span className="text-sm font-medium text-gray-700">
+                  Manage Users
+                </span>
+              </Link>
             </div>
           </CardContent>
         </Card>

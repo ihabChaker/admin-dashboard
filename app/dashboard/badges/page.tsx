@@ -51,7 +51,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination';
+} from "@/components/ui/pagination";
 
 interface Badge {
   id: number;
@@ -145,7 +145,7 @@ export default function BadgesPage() {
       iconUrl: badge.iconUrl || "",
       requirement: badge.requirement,
       points: badge.points,
-      rarity: badge.rarity as any,
+      rarity: badge.rarity as "commun" | "rare" | "épique" | "légendaire",
       isActive: badge.isActive,
     });
     setOpen(true);
@@ -160,7 +160,7 @@ export default function BadgesPage() {
       };
 
       if (editingBadge) {
-        await api.put(`/badges/${editingBadge.id}`, payload);
+        await api.patch(`/badges/${editingBadge.id}`, payload);
         toast.success("Badge updated successfully");
       } else {
         await api.post("/badges", payload);
@@ -170,7 +170,9 @@ export default function BadgesPage() {
       fetchBadges();
     } catch (error) {
       console.error("Failed to save badge", error);
-      toast.error(editingBadge ? "Failed to update badge" : "Failed to create badge");
+      toast.error(
+        editingBadge ? "Failed to update badge" : "Failed to create badge"
+      );
     }
   };
 
@@ -229,7 +231,9 @@ export default function BadgesPage() {
             <Award className="h-8 w-8 text-blue-600" />
             Badges Management
           </h1>
-          <p className="text-gray-600 mt-1">Create and manage achievement badges for users</p>
+          <p className="text-gray-600 mt-1">
+            Create and manage achievement badges for users
+          </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -239,10 +243,12 @@ export default function BadgesPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>{editingBadge ? "Edit Badge" : "Add New Badge"}</DialogTitle>
+              <DialogTitle>
+                {editingBadge ? "Edit Badge" : "Add New Badge"}
+              </DialogTitle>
               <DialogDescription>
-                {editingBadge 
-                  ? "Update the badge details." 
+                {editingBadge
+                  ? "Update the badge details."
                   : "Create a new achievement badge that users can earn."}
               </DialogDescription>
             </DialogHeader>
@@ -271,10 +277,10 @@ export default function BadgesPage() {
                     <FormItem>
                       <FormLabel>Description *</FormLabel>
                       <FormControl>
-                        <Textarea 
+                        <Textarea
                           placeholder="Describe what users need to do to earn this badge..."
                           rows={3}
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -288,10 +294,10 @@ export default function BadgesPage() {
                     <FormItem>
                       <FormLabel>Icon URL (Optional)</FormLabel>
                       <FormControl>
-                        <Input 
+                        <Input
                           type="url"
-                          placeholder="https://example.com/badge-icon.png" 
-                          {...field} 
+                          placeholder="https://example.com/badge-icon.png"
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -305,9 +311,9 @@ export default function BadgesPage() {
                     <FormItem>
                       <FormLabel>Requirement Code *</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="e.g., DISTANCE_42KM, VISIT_10_POI" 
-                          {...field} 
+                        <Input
+                          placeholder="e.g., DISTANCE_42KM, VISIT_10_POI"
+                          {...field}
                         />
                       </FormControl>
                       <div className="text-xs text-gray-500 mt-1">
@@ -331,7 +337,9 @@ export default function BadgesPage() {
                             placeholder="50"
                             {...field}
                             value={field.value as number}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={(e) =>
+                              field.onChange(parseFloat(e.target.value) || 0)
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -357,7 +365,9 @@ export default function BadgesPage() {
                             <SelectItem value="commun">⭐ Common</SelectItem>
                             <SelectItem value="rare">⭐⭐ Rare</SelectItem>
                             <SelectItem value="épique">⭐⭐⭐ Epic</SelectItem>
-                            <SelectItem value="légendaire">⭐⭐⭐⭐ Legendary</SelectItem>
+                            <SelectItem value="légendaire">
+                              ⭐⭐⭐⭐ Legendary
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -371,7 +381,9 @@ export default function BadgesPage() {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
-                        <FormLabel className="text-base">Active Status</FormLabel>
+                        <FormLabel className="text-base">
+                          Active Status
+                        </FormLabel>
                         <div className="text-sm text-gray-500">
                           Users can earn active badges
                         </div>
@@ -403,11 +415,22 @@ export default function BadgesPage() {
         <CardContent>
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm text-muted-foreground">
-              Showing {Math.min((paginationMeta.page - 1) * paginationMeta.limit + 1, paginationMeta.total)} to{' '}
-              {Math.min(paginationMeta.page * paginationMeta.limit, paginationMeta.total)} of {paginationMeta.total} results
+              Showing{" "}
+              {Math.min(
+                (paginationMeta.page - 1) * paginationMeta.limit + 1,
+                paginationMeta.total
+              )}{" "}
+              to{" "}
+              {Math.min(
+                paginationMeta.page * paginationMeta.limit,
+                paginationMeta.total
+              )}{" "}
+              of {paginationMeta.total} results
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Rows per page:</span>
+              <span className="text-sm text-muted-foreground">
+                Rows per page:
+              </span>
               <Select
                 value={paginationMeta.limit.toString()}
                 onValueChange={(value) => handlePageSizeChange(Number(value))}
@@ -454,8 +477,8 @@ export default function BadgesPage() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         {badge.iconUrl ? (
-                          <img 
-                            src={badge.iconUrl} 
+                          <img
+                            src={badge.iconUrl}
                             alt={badge.name}
                             className="w-10 h-10 rounded-full object-cover"
                           />
@@ -478,11 +501,17 @@ export default function BadgesPage() {
                       </code>
                     </TableCell>
                     <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRarityColor(badge.rarity)}`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getRarityColor(
+                          badge.rarity
+                        )}`}
+                      >
                         {getRarityIcon(badge.rarity)} {badge.rarity}
                       </span>
                     </TableCell>
-                    <TableCell className="font-medium">{badge.points}</TableCell>
+                    <TableCell className="font-medium">
+                      {badge.points}
+                    </TableCell>
                     <TableCell>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -496,9 +525,9 @@ export default function BadgesPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleEdit(badge)}
                         >
                           <Edit className="h-4 w-4" />
@@ -523,11 +552,21 @@ export default function BadgesPage() {
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
-                    onClick={() => paginationMeta.hasPreviousPage && handlePageChange(paginationMeta.page - 1)}
-                    className={!paginationMeta.hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    onClick={() =>
+                      paginationMeta.hasPreviousPage &&
+                      handlePageChange(paginationMeta.page - 1)
+                    }
+                    className={
+                      !paginationMeta.hasPreviousPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
                   />
                 </PaginationItem>
-                {Array.from({ length: paginationMeta.totalPages }, (_, i) => i + 1).map((pageNum) => (
+                {Array.from(
+                  { length: paginationMeta.totalPages },
+                  (_, i) => i + 1
+                ).map((pageNum) => (
                   <PaginationItem key={pageNum}>
                     <PaginationLink
                       onClick={() => handlePageChange(pageNum)}
@@ -540,8 +579,15 @@ export default function BadgesPage() {
                 ))}
                 <PaginationItem>
                   <PaginationNext
-                    onClick={() => paginationMeta.hasNextPage && handlePageChange(paginationMeta.page + 1)}
-                    className={!paginationMeta.hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    onClick={() =>
+                      paginationMeta.hasNextPage &&
+                      handlePageChange(paginationMeta.page + 1)
+                    }
+                    className={
+                      !paginationMeta.hasNextPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
                   />
                 </PaginationItem>
               </PaginationContent>

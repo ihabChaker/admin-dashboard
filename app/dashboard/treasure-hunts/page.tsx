@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import api from '@/lib/api';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import api from "@/lib/api";
 import {
   Table,
   TableBody,
@@ -12,9 +13,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -31,18 +33,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Edit, MapPin } from 'lucide-react';
-import { toast } from 'sonner';
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Trash2, Edit, MapPin } from "lucide-react";
+import { toast } from "sonner";
 import {
   Pagination,
   PaginationContent,
@@ -50,19 +52,13 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination';
+} from "@/components/ui/pagination";
+import { TreasureHunt as TreasureHuntType, TreasureItem } from "@/lib/types";
 
-interface TreasureHunt {
-  id: number;
-  name: string;
-  description: string;
-  targetObject: string;
-  pointsReward: number;
-  isActive: boolean;
-  parcoursId: number;
-  latitude: number;
-  longitude: number;
-  scanRadiusMeters: number;
+interface TreasureHunt extends TreasureHuntType {
+  parcours?: {
+    name: string;
+  };
 }
 
 interface Parcours {
@@ -71,23 +67,26 @@ interface Parcours {
 }
 
 const formSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  targetObject: z.string().min(1, 'Target object is required'),
-  pointsReward: z.coerce.number().int().positive('Points must be positive'),
+  targetObject: z.string().min(1, "Target object is required"),
+  pointsReward: z.coerce.number().int().positive("Points must be positive"),
   isActive: z.boolean().default(true),
-  parcoursId: z.coerce.number().positive('Parcours is required'),
+  parcoursId: z.coerce.number().positive("Parcours is required"),
   latitude: z.coerce.number().min(-90).max(90),
   longitude: z.coerce.number().min(-180).max(180),
   scanRadiusMeters: z.coerce.number().int().positive().default(50),
 });
 
 export default function TreasureHuntPage() {
+  const router = useRouter();
   const [treasures, setTreasures] = useState<TreasureHunt[]>([]);
   const [parcoursList, setParcoursList] = useState<Parcours[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [editingTreasure, setEditingTreasure] = useState<TreasureHunt | null>(null);
+  const [editingTreasure, setEditingTreasure] = useState<TreasureHunt | null>(
+    null
+  );
   const [paginationMeta, setPaginationMeta] = useState({
     page: 1,
     limit: 10,
@@ -100,9 +99,9 @@ export default function TreasureHuntPage() {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      description: '',
-      targetObject: '',
+      name: "",
+      description: "",
+      targetObject: "",
       pointsReward: 75,
       isActive: true,
       parcoursId: 0,
@@ -116,7 +115,7 @@ export default function TreasureHuntPage() {
     try {
       const [treasuresRes, parcoursRes] = await Promise.all([
         api.get(`/treasure-hunts?page=${page}&limit=${limit}`),
-        api.get('/parcours'),
+        api.get("/parcours"),
       ]);
       setTreasures(treasuresRes.data.data || treasuresRes.data);
       if (treasuresRes.data.meta) {
@@ -124,8 +123,8 @@ export default function TreasureHuntPage() {
       }
       setParcoursList(parcoursRes.data.data || parcoursRes.data);
     } catch (error) {
-      console.error('Failed to fetch data', error);
-      toast.error('Failed to fetch data');
+      console.error("Failed to fetch data", error);
+      toast.error("Failed to fetch data");
     } finally {
       setLoading(false);
     }
@@ -139,9 +138,9 @@ export default function TreasureHuntPage() {
     if (!open) {
       setEditingTreasure(null);
       form.reset({
-        name: '',
-        description: '',
-        targetObject: '',
+        name: "",
+        description: "",
+        targetObject: "",
         pointsReward: 75,
         isActive: true,
         parcoursId: 0,
@@ -172,29 +171,33 @@ export default function TreasureHuntPage() {
     try {
       if (editingTreasure) {
         await api.put(`/treasure-hunts/${editingTreasure.id}`, values);
-        toast.success('Treasure hunt updated successfully');
+        toast.success("Treasure hunt updated successfully");
       } else {
-        await api.post('/treasure-hunts', values);
-        toast.success('Treasure hunt created successfully');
+        await api.post("/treasure-hunts", values);
+        toast.success("Treasure hunt created successfully");
       }
       setOpen(false);
       fetchData();
     } catch (error) {
-      console.error('Failed to save treasure hunt', error);
-      toast.error(editingTreasure ? 'Failed to update treasure hunt' : 'Failed to create treasure hunt');
+      console.error("Failed to save treasure hunt", error);
+      toast.error(
+        editingTreasure
+          ? "Failed to update treasure hunt"
+          : "Failed to create treasure hunt"
+      );
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this treasure hunt?')) return;
-    
+    if (!confirm("Are you sure you want to delete this treasure hunt?")) return;
+
     try {
       await api.delete(`/treasure-hunts/${id}`);
-      toast.success('Treasure hunt deleted successfully');
+      toast.success("Treasure hunt deleted successfully");
       fetchData();
     } catch (error) {
-      console.error('Failed to delete treasure hunt', error);
-      toast.error('Failed to delete treasure hunt');
+      console.error("Failed to delete treasure hunt", error);
+      toast.error("Failed to delete treasure hunt");
     }
   };
 
@@ -214,7 +217,9 @@ export default function TreasureHuntPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Treasure Hunt Management</h1>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Treasure Hunt Management
+        </h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -223,13 +228,22 @@ export default function TreasureHuntPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingTreasure ? 'Edit Treasure Hunt' : 'Add New Treasure Hunt'}</DialogTitle>
+              <DialogTitle>
+                {editingTreasure
+                  ? "Edit Treasure Hunt"
+                  : "Add New Treasure Hunt"}
+              </DialogTitle>
               <DialogDescription>
-                {editingTreasure ? 'Update the treasure hunt details.' : 'Create a hidden treasure for users to find.'}
+                {editingTreasure
+                  ? "Update the treasure hunt details."
+                  : "Create a hidden treasure for users to find."}
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
                 <FormField
                   control={form.control}
                   name="name"
@@ -277,7 +291,11 @@ export default function TreasureHuntPage() {
                       <FormItem>
                         <FormLabel>Points Reward</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} value={field.value as number} />
+                          <Input
+                            type="number"
+                            {...field}
+                            value={field.value as number}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -292,7 +310,12 @@ export default function TreasureHuntPage() {
                       <FormItem>
                         <FormLabel>Latitude</FormLabel>
                         <FormControl>
-                          <Input type="number" step="any" {...field} value={field.value as number} />
+                          <Input
+                            type="number"
+                            step="any"
+                            {...field}
+                            value={field.value as number}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -305,7 +328,12 @@ export default function TreasureHuntPage() {
                       <FormItem>
                         <FormLabel>Longitude</FormLabel>
                         <FormControl>
-                          <Input type="number" step="any" {...field} value={field.value as number} />
+                          <Input
+                            type="number"
+                            step="any"
+                            {...field}
+                            value={field.value as number}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -319,9 +347,13 @@ export default function TreasureHuntPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Parcours</FormLabel>
-                        <Select 
-                          onValueChange={(value) => field.onChange(parseInt(value))} 
-                          defaultValue={field.value ? field.value.toString() : undefined}
+                        <Select
+                          onValueChange={(value) =>
+                            field.onChange(parseInt(value))
+                          }
+                          defaultValue={
+                            field.value ? field.value.toString() : undefined
+                          }
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -347,7 +379,11 @@ export default function TreasureHuntPage() {
                       <FormItem>
                         <FormLabel>Scan Radius (m)</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} value={field.value as number} />
+                          <Input
+                            type="number"
+                            {...field}
+                            value={field.value as number}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -366,15 +402,15 @@ export default function TreasureHuntPage() {
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>
-                          Active
-                        </FormLabel>
+                        <FormLabel>Active</FormLabel>
                       </div>
                     </FormItem>
                   )}
                 />
                 <DialogFooter>
-                  <Button type="submit">{editingTreasure ? 'Update Treasure' : 'Create Treasure'}</Button>
+                  <Button type="submit">
+                    {editingTreasure ? "Update Treasure" : "Create Treasure"}
+                  </Button>
                 </DialogFooter>
               </form>
             </Form>
@@ -389,11 +425,22 @@ export default function TreasureHuntPage() {
         <CardContent>
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm text-muted-foreground">
-              Showing {Math.min((paginationMeta.page - 1) * paginationMeta.limit + 1, paginationMeta.total)} to{' '}
-              {Math.min(paginationMeta.page * paginationMeta.limit, paginationMeta.total)} of {paginationMeta.total} results
+              Showing{" "}
+              {Math.min(
+                (paginationMeta.page - 1) * paginationMeta.limit + 1,
+                paginationMeta.total
+              )}{" "}
+              to{" "}
+              {Math.min(
+                paginationMeta.page * paginationMeta.limit,
+                paginationMeta.total
+              )}{" "}
+              of {paginationMeta.total} results
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Rows per page:</span>
+              <span className="text-sm text-muted-foreground">
+                Rows per page:
+              </span>
               <Select
                 value={paginationMeta.limit.toString()}
                 onValueChange={(value) => handlePageSizeChange(Number(value))}
@@ -418,6 +465,7 @@ export default function TreasureHuntPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Target</TableHead>
                 <TableHead>Parcours</TableHead>
+                <TableHead>Items</TableHead>
                 <TableHead>Points</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -426,7 +474,10 @@ export default function TreasureHuntPage() {
             <TableBody>
               {treasures.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                  <TableCell
+                    colSpan={8}
+                    className="text-center py-8 text-gray-500"
+                  >
                     No treasure hunts found.
                   </TableCell>
                 </TableRow>
@@ -437,7 +488,13 @@ export default function TreasureHuntPage() {
                     <TableCell className="font-medium">{t.name}</TableCell>
                     <TableCell>{t.targetObject}</TableCell>
                     <TableCell>
-                      {parcoursList.find(p => p.id === t.parcoursId)?.name || t.parcoursId}
+                      {parcoursList.find((p) => p.id === t.parcoursId)?.name ||
+                        t.parcoursId}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {t.items?.length || 0} items
+                      </Badge>
                     </TableCell>
                     <TableCell>{t.pointsReward}</TableCell>
                     <TableCell>
@@ -449,10 +506,28 @@ export default function TreasureHuntPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(t)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            router.push(`/dashboard/treasure-hunts/${t.id}`)
+                          }
+                        >
+                          View Details
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(t)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(t.id)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleDelete(t.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -467,11 +542,21 @@ export default function TreasureHuntPage() {
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
-                    onClick={() => paginationMeta.hasPreviousPage && handlePageChange(paginationMeta.page - 1)}
-                    className={!paginationMeta.hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    onClick={() =>
+                      paginationMeta.hasPreviousPage &&
+                      handlePageChange(paginationMeta.page - 1)
+                    }
+                    className={
+                      !paginationMeta.hasPreviousPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
                   />
                 </PaginationItem>
-                {Array.from({ length: paginationMeta.totalPages }, (_, i) => i + 1).map((pageNum) => (
+                {Array.from(
+                  { length: paginationMeta.totalPages },
+                  (_, i) => i + 1
+                ).map((pageNum) => (
                   <PaginationItem key={pageNum}>
                     <PaginationLink
                       onClick={() => handlePageChange(pageNum)}
@@ -484,8 +569,15 @@ export default function TreasureHuntPage() {
                 ))}
                 <PaginationItem>
                   <PaginationNext
-                    onClick={() => paginationMeta.hasNextPage && handlePageChange(paginationMeta.page + 1)}
-                    className={!paginationMeta.hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    onClick={() =>
+                      paginationMeta.hasNextPage &&
+                      handlePageChange(paginationMeta.page + 1)
+                    }
+                    className={
+                      !paginationMeta.hasNextPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
                   />
                 </PaginationItem>
               </PaginationContent>

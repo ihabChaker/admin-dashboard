@@ -49,7 +49,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination';
+} from "@/components/ui/pagination";
 
 interface Reward {
   id: number;
@@ -136,7 +136,11 @@ export default function RewardsPage() {
       description: r.description,
       pointsCost: r.pointsCost,
       stockQuantity: r.stockQuantity,
-      rewardType: r.rewardType as any,
+      rewardType: r.rewardType as
+        | "discount"
+        | "gift"
+        | "badge"
+        | "premium_content",
       partnerName: "", // Assuming partnerName is not in the list view or needs to be fetched
     });
     setOpen(true);
@@ -155,7 +159,9 @@ export default function RewardsPage() {
       fetchRewards();
     } catch (error) {
       console.error("Failed to save reward", error);
-      toast.error(editingReward ? "Failed to update reward" : "Failed to create reward");
+      toast.error(
+        editingReward ? "Failed to update reward" : "Failed to create reward"
+      );
     }
   };
 
@@ -197,9 +203,13 @@ export default function RewardsPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>{editingReward ? "Edit Reward" : "Add New Reward"}</DialogTitle>
+              <DialogTitle>
+                {editingReward ? "Edit Reward" : "Add New Reward"}
+              </DialogTitle>
               <DialogDescription>
-                {editingReward ? "Update the reward details." : "Create a new reward for users to redeem with their points."}
+                {editingReward
+                  ? "Update the reward details."
+                  : "Create a new reward for users to redeem with their points."}
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -241,7 +251,11 @@ export default function RewardsPage() {
                       <FormItem>
                         <FormLabel>Points Cost</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} value={field.value as number} />
+                          <Input
+                            type="number"
+                            {...field}
+                            value={field.value as number}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -254,7 +268,11 @@ export default function RewardsPage() {
                       <FormItem>
                         <FormLabel>Stock</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} value={field.value as number} />
+                          <Input
+                            type="number"
+                            {...field}
+                            value={field.value as number}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -290,7 +308,9 @@ export default function RewardsPage() {
                   )}
                 />
                 <DialogFooter>
-                  <Button type="submit">{editingReward ? "Update Reward" : "Create Reward"}</Button>
+                  <Button type="submit">
+                    {editingReward ? "Update Reward" : "Create Reward"}
+                  </Button>
                 </DialogFooter>
               </form>
             </Form>
@@ -305,11 +325,22 @@ export default function RewardsPage() {
         <CardContent>
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm text-muted-foreground">
-              Showing {Math.min((paginationMeta.page - 1) * paginationMeta.limit + 1, paginationMeta.total)} to{' '}
-              {Math.min(paginationMeta.page * paginationMeta.limit, paginationMeta.total)} of {paginationMeta.total} results
+              Showing{" "}
+              {Math.min(
+                (paginationMeta.page - 1) * paginationMeta.limit + 1,
+                paginationMeta.total
+              )}{" "}
+              to{" "}
+              {Math.min(
+                paginationMeta.page * paginationMeta.limit,
+                paginationMeta.total
+              )}{" "}
+              of {paginationMeta.total} results
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Rows per page:</span>
+              <span className="text-sm text-muted-foreground">
+                Rows per page:
+              </span>
               <Select
                 value={paginationMeta.limit.toString()}
                 onValueChange={(value) => handlePageSizeChange(Number(value))}
@@ -370,7 +401,11 @@ export default function RewardsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(r)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(r)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
@@ -393,11 +428,21 @@ export default function RewardsPage() {
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
-                    onClick={() => paginationMeta.hasPreviousPage && handlePageChange(paginationMeta.page - 1)}
-                    className={!paginationMeta.hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    onClick={() =>
+                      paginationMeta.hasPreviousPage &&
+                      handlePageChange(paginationMeta.page - 1)
+                    }
+                    className={
+                      !paginationMeta.hasPreviousPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
                   />
                 </PaginationItem>
-                {Array.from({ length: paginationMeta.totalPages }, (_, i) => i + 1).map((pageNum) => (
+                {Array.from(
+                  { length: paginationMeta.totalPages },
+                  (_, i) => i + 1
+                ).map((pageNum) => (
                   <PaginationItem key={pageNum}>
                     <PaginationLink
                       onClick={() => handlePageChange(pageNum)}
@@ -410,8 +455,15 @@ export default function RewardsPage() {
                 ))}
                 <PaginationItem>
                   <PaginationNext
-                    onClick={() => paginationMeta.hasNextPage && handlePageChange(paginationMeta.page + 1)}
-                    className={!paginationMeta.hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    onClick={() =>
+                      paginationMeta.hasNextPage &&
+                      handlePageChange(paginationMeta.page + 1)
+                    }
+                    className={
+                      !paginationMeta.hasNextPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
                   />
                 </PaginationItem>
               </PaginationContent>

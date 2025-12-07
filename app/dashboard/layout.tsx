@@ -1,11 +1,27 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { LayoutDashboard, Users, Map, MapPin, Trophy, LogOut, HelpCircle, Gem, Mic, Target, Award, Shield } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  LayoutDashboard,
+  Users,
+  Map,
+  MapPin,
+  Trophy,
+  LogOut,
+  HelpCircle,
+  Gem,
+  Mic,
+  Target,
+  Award,
+  Shield,
+  Activity,
+  TrendingUp,
+  Play,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function DashboardLayout({
   children,
@@ -13,14 +29,18 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [user, setUser] = useState<{ username: string; email: string } | null>(null);
+  const [user, setUser] = useState<{ username: string; email: string } | null>(
+    null
+  );
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    setMounted(true);
+    const token = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
 
     if (!token || !storedUser) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
@@ -28,12 +48,12 @@ export default function DashboardLayout({
   }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/login');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/login");
   };
 
-  if (!user) return null;
+  if (!mounted || !user) return null;
 
   return (
     <div className="flex min-h-screen">
@@ -44,47 +64,101 @@ export default function DashboardLayout({
           <p className="text-sm text-gray-400">Admin Dashboard</p>
         </div>
         <nav className="flex-1 px-4 space-y-2">
-          <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+          >
             <LayoutDashboard size={20} />
             Dashboard
           </Link>
-          <Link href="/dashboard/users" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+          <Link
+            href="/dashboard/users"
+            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+          >
             <Users size={20} />
             Users
           </Link>
-          <Link href="/dashboard/parcours" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+          <Link
+            href="/dashboard/activities"
+            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            <Activity size={20} />
+            User Activities
+          </Link>
+          <Link
+            href="/dashboard/sessions"
+            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            <Play size={20} />
+            Parcours Sessions
+          </Link>
+          <Link
+            href="/dashboard/leaderboard"
+            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            <TrendingUp size={20} />
+            Leaderboard
+          </Link>
+          <Link
+            href="/dashboard/parcours"
+            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+          >
             <Map size={20} />
             Parcours
           </Link>
-          <Link href="/dashboard/poi" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+          <Link
+            href="/dashboard/poi"
+            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+          >
             <MapPin size={20} />
             Points of Interest
           </Link>
-          <Link href="/dashboard/podcasts" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+          <Link
+            href="/dashboard/podcasts"
+            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+          >
             <Mic size={20} />
             Podcasts
           </Link>
-          <Link href="/dashboard/quizzes" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+          <Link
+            href="/dashboard/quizzes"
+            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+          >
             <HelpCircle size={20} />
             Quizzes
           </Link>
-          <Link href="/dashboard/challenges" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+          <Link
+            href="/dashboard/challenges"
+            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+          >
             <Target size={20} />
             Challenges
           </Link>
-          <Link href="/dashboard/badges" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+          <Link
+            href="/dashboard/badges"
+            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+          >
             <Award size={20} />
             Badges
           </Link>
-          <Link href="/dashboard/treasure-hunts" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+          <Link
+            href="/dashboard/treasure-hunts"
+            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+          >
             <Gem size={20} />
             Treasure Hunts
           </Link>
-          <Link href="/dashboard/rewards" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+          <Link
+            href="/dashboard/rewards"
+            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+          >
             <Trophy size={20} />
             Rewards
           </Link>
-          <Link href="/dashboard/battalion" className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
+          <Link
+            href="/dashboard/battalion"
+            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+          >
             <Shield size={20} />
             Historical Data
           </Link>
@@ -93,14 +167,20 @@ export default function DashboardLayout({
           <div className="flex items-center gap-3 mb-4">
             <Avatar>
               <AvatarImage src="" />
-              <AvatarFallback>{user.username.substring(0, 2).toUpperCase()}</AvatarFallback>
+              <AvatarFallback>
+                {user.username.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <div>
               <p className="font-medium">{user.username}</p>
               <p className="text-xs text-gray-400">{user.email}</p>
             </div>
           </div>
-          <Button variant="destructive" className="w-full flex items-center gap-2" onClick={handleLogout}>
+          <Button
+            variant="destructive"
+            className="w-full flex items-center gap-2"
+            onClick={handleLogout}
+          >
             <LogOut size={16} />
             Logout
           </Button>
@@ -108,9 +188,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 bg-gray-50 p-8 overflow-y-auto">
-        {children}
-      </main>
+      <main className="flex-1 bg-gray-50 p-8 overflow-y-auto">{children}</main>
     </div>
   );
 }

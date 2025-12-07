@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import api from '@/lib/api';
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import api from "@/lib/api";
 import {
   Table,
   TableBody,
@@ -12,9 +12,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -31,19 +31,19 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Edit, HelpCircle, List } from 'lucide-react';
-import { toast } from 'sonner';
-import Link from 'next/link';
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Trash2, Edit, HelpCircle, List } from "lucide-react";
+import { toast } from "sonner";
+import Link from "next/link";
 import {
   Pagination,
   PaginationContent,
@@ -51,7 +51,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination';
+} from "@/components/ui/pagination";
 
 interface Quiz {
   id: number;
@@ -63,10 +63,10 @@ interface Quiz {
 }
 
 const formSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
+  title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
-  difficulty: z.enum(['easy', 'medium', 'hard']),
-  pointsReward: z.coerce.number().int().positive('Points must be positive'),
+  difficulty: z.enum(["easy", "medium", "hard"]),
+  pointsReward: z.coerce.number().int().positive("Points must be positive"),
   isActive: z.boolean().default(true),
 });
 
@@ -87,9 +87,9 @@ export default function QuizzesPage() {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
-      description: '',
-      difficulty: 'medium',
+      title: "",
+      description: "",
+      difficulty: "medium",
       pointsReward: 50,
       isActive: true,
     },
@@ -103,8 +103,8 @@ export default function QuizzesPage() {
         setPaginationMeta(response.data.meta);
       }
     } catch (error) {
-      console.error('Failed to fetch quizzes', error);
-      toast.error('Failed to fetch quizzes');
+      console.error("Failed to fetch quizzes", error);
+      toast.error("Failed to fetch quizzes");
     } finally {
       setLoading(false);
     }
@@ -118,9 +118,9 @@ export default function QuizzesPage() {
     if (!open) {
       setEditingQuiz(null);
       form.reset({
-        title: '',
-        description: '',
-        difficulty: 'medium',
+        title: "",
+        description: "",
+        difficulty: "medium",
         pointsReward: 50,
         isActive: true,
       });
@@ -132,7 +132,7 @@ export default function QuizzesPage() {
     form.reset({
       title: quiz.title,
       description: quiz.description,
-      difficulty: quiz.difficulty as any,
+      difficulty: quiz.difficulty as "easy" | "medium" | "hard",
       pointsReward: quiz.pointsReward,
       isActive: quiz.isActive,
     });
@@ -143,29 +143,31 @@ export default function QuizzesPage() {
     try {
       if (editingQuiz) {
         await api.put(`/quizzes/${editingQuiz.id}`, values);
-        toast.success('Quiz updated successfully');
+        toast.success("Quiz updated successfully");
       } else {
-        await api.post('/quizzes', values);
-        toast.success('Quiz created successfully');
+        await api.post("/quizzes", values);
+        toast.success("Quiz created successfully");
       }
       setOpen(false);
       fetchQuizzes();
     } catch (error) {
-      console.error('Failed to save quiz', error);
-      toast.error(editingQuiz ? 'Failed to update quiz' : 'Failed to create quiz');
+      console.error("Failed to save quiz", error);
+      toast.error(
+        editingQuiz ? "Failed to update quiz" : "Failed to create quiz"
+      );
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this quiz?')) return;
+    if (!confirm("Are you sure you want to delete this quiz?")) return;
 
     try {
       await api.delete(`/quizzes/${id}`);
-      toast.success('Quiz deleted successfully');
+      toast.success("Quiz deleted successfully");
       fetchQuizzes();
     } catch (error) {
-      console.error('Failed to delete quiz', error);
-      toast.error('Failed to delete quiz');
+      console.error("Failed to delete quiz", error);
+      toast.error("Failed to delete quiz");
     }
   };
 
@@ -176,7 +178,8 @@ export default function QuizzesPage() {
   const handlePageSizeChange = (pageSize: number) => {
     setPaginationMeta({ ...paginationMeta, limit: pageSize, page: 1 });
     fetchQuizzes(1, pageSize);
-  };  if (loading) {
+  };
+  if (loading) {
     return <div className="p-8">Loading quizzes...</div>;
   }
 
@@ -192,13 +195,20 @@ export default function QuizzesPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>{editingQuiz ? 'Edit Quiz' : 'Add New Quiz'}</DialogTitle>
+              <DialogTitle>
+                {editingQuiz ? "Edit Quiz" : "Add New Quiz"}
+              </DialogTitle>
               <DialogDescription>
-                {editingQuiz ? 'Update the quiz details.' : 'Create a new quiz. You can add questions later.'}
+                {editingQuiz
+                  ? "Update the quiz details."
+                  : "Create a new quiz. You can add questions later."}
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
                 <FormField
                   control={form.control}
                   name="title"
@@ -232,7 +242,10 @@ export default function QuizzesPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Difficulty</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select difficulty" />
@@ -255,7 +268,11 @@ export default function QuizzesPage() {
                       <FormItem>
                         <FormLabel>Points Reward</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} value={field.value as number} />
+                          <Input
+                            type="number"
+                            {...field}
+                            value={field.value as number}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -274,15 +291,15 @@ export default function QuizzesPage() {
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>
-                          Active
-                        </FormLabel>
+                        <FormLabel>Active</FormLabel>
                       </div>
                     </FormItem>
                   )}
                 />
                 <DialogFooter>
-                  <Button type="submit">{editingQuiz ? 'Update Quiz' : 'Create Quiz'}</Button>
+                  <Button type="submit">
+                    {editingQuiz ? "Update Quiz" : "Create Quiz"}
+                  </Button>
                 </DialogFooter>
               </form>
             </Form>
@@ -297,11 +314,22 @@ export default function QuizzesPage() {
         <CardContent>
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm text-muted-foreground">
-              Showing {Math.min((paginationMeta.page - 1) * paginationMeta.limit + 1, paginationMeta.total)} to{' '}
-              {Math.min(paginationMeta.page * paginationMeta.limit, paginationMeta.total)} of {paginationMeta.total} results
+              Showing{" "}
+              {Math.min(
+                (paginationMeta.page - 1) * paginationMeta.limit + 1,
+                paginationMeta.total
+              )}{" "}
+              to{" "}
+              {Math.min(
+                paginationMeta.page * paginationMeta.limit,
+                paginationMeta.total
+              )}{" "}
+              of {paginationMeta.total} results
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Rows per page:</span>
+              <span className="text-sm text-muted-foreground">
+                Rows per page:
+              </span>
               <Select
                 value={paginationMeta.limit.toString()}
                 onValueChange={(value) => handlePageSizeChange(Number(value))}
@@ -333,7 +361,10 @@ export default function QuizzesPage() {
             <TableBody>
               {quizzes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell
+                    colSpan={6}
+                    className="text-center py-8 text-gray-500"
+                  >
                     No quizzes found.
                   </TableCell>
                 </TableRow>
@@ -343,11 +374,15 @@ export default function QuizzesPage() {
                     <TableCell className="font-medium">{quiz.id}</TableCell>
                     <TableCell className="font-medium">{quiz.title}</TableCell>
                     <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        quiz.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                        quiz.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          quiz.difficulty === "easy"
+                            ? "bg-green-100 text-green-700"
+                            : quiz.difficulty === "medium"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
                         {quiz.difficulty}
                       </span>
                     </TableCell>
@@ -362,14 +397,27 @@ export default function QuizzesPage() {
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Link href={`/dashboard/quizzes/${quiz.id}`}>
-                          <Button variant="ghost" size="icon" title="Manage Questions">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Manage Questions"
+                          >
                             <List className="h-4 w-4" />
                           </Button>
                         </Link>
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(quiz)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(quiz)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(quiz.id)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleDelete(quiz.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -384,11 +432,21 @@ export default function QuizzesPage() {
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
-                    onClick={() => paginationMeta.hasPreviousPage && handlePageChange(paginationMeta.page - 1)}
-                    className={!paginationMeta.hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    onClick={() =>
+                      paginationMeta.hasPreviousPage &&
+                      handlePageChange(paginationMeta.page - 1)
+                    }
+                    className={
+                      !paginationMeta.hasPreviousPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
                   />
                 </PaginationItem>
-                {Array.from({ length: paginationMeta.totalPages }, (_, i) => i + 1).map((pageNum) => (
+                {Array.from(
+                  { length: paginationMeta.totalPages },
+                  (_, i) => i + 1
+                ).map((pageNum) => (
                   <PaginationItem key={pageNum}>
                     <PaginationLink
                       onClick={() => handlePageChange(pageNum)}
@@ -401,8 +459,15 @@ export default function QuizzesPage() {
                 ))}
                 <PaginationItem>
                   <PaginationNext
-                    onClick={() => paginationMeta.hasNextPage && handlePageChange(paginationMeta.page + 1)}
-                    className={!paginationMeta.hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    onClick={() =>
+                      paginationMeta.hasNextPage &&
+                      handlePageChange(paginationMeta.page + 1)
+                    }
+                    className={
+                      !paginationMeta.hasNextPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
                   />
                 </PaginationItem>
               </PaginationContent>

@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import api from '@/lib/api';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import api from "@/lib/api";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -14,10 +14,16 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -31,48 +37,55 @@ export default function LoginPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      const response = await api.post('/auth/login', values);
+      const response = await api.post("/auth/login", values);
       const { access_token, user } = response.data;
 
-      if (user.role !== 'admin') {
-        toast.error('Access denied. Admins only.');
+      if (user.role !== "admin") {
+        toast.error("Access denied. Admins only.");
         setIsLoading(false);
         return;
       }
 
-      localStorage.setItem('token', access_token);
-      localStorage.setItem('user', JSON.stringify(user));
-      toast.success('Login successful');
-      router.push('/dashboard');
-    } catch (error: any) {
-      console.error('Login error:', error);
-      
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("user", JSON.stringify(user));
+      toast.success("Login successful");
+      router.push("/dashboard");
+    } catch (error: unknown) {
+      console.error("Login error:", error);
+
       // Detailed error handling
-      if (error.response) {
-        const status = error.response.status;
-        const message = error.response.data?.message || 'Login failed';
-        
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response?: { status: number; data?: { message?: string } };
+        };
+        const status = axiosError.response?.status;
+        const message = axiosError.response?.data?.message || "Login failed";
+
         if (status === 401) {
-          toast.error('Invalid email or password');
+          toast.error("Invalid email or password");
         } else if (status === 500) {
-          toast.error('Server error. Please contact support or check backend logs.');
+          toast.error(
+            "Server error. Please contact support or check backend logs."
+          );
         } else if (status === 400) {
           toast.error(message);
         } else {
           toast.error(`Error: ${message}`);
         }
-      } else if (error.request) {
-        toast.error('Cannot connect to server. Please check your internet connection.');
+      } else if ("request" in (error as object)) {
+        toast.error(
+          "Cannot connect to server. Please check your internet connection."
+        );
       } else {
-        toast.error('An unexpected error occurred');
+        toast.error("An unexpected error occurred");
       }
     } finally {
       setIsLoading(false);
@@ -84,7 +97,9 @@ export default function LoginPage() {
       <Card className="w-[400px]">
         <CardHeader>
           <CardTitle>Admin Login</CardTitle>
-          <CardDescription>Enter your credentials to access the dashboard.</CardDescription>
+          <CardDescription>
+            Enter your credentials to access the dashboard.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -116,7 +131,7 @@ export default function LoginPage() {
                 )}
               />
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Logging in...' : 'Login'}
+                {isLoading ? "Logging in..." : "Login"}
               </Button>
             </form>
           </Form>

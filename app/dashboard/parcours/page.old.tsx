@@ -1,23 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Plus, Eye, MapPin } from "lucide-react";
+import { Edit, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import { ServerDataTable } from "@/components/server-data-table";
 import { DataTableColumnHeader } from "@/components/data-table";
-import { Parcours, PaginationMeta } from "@/lib/types";
+
+interface Parcours {
+  id: number;
+  name: string;
+  description: string;
+  difficultyLevel: string;
+  distanceKm: number;
+  estimatedDuration: number;
+  isPmrAccessible: boolean;
+  historicalTheme: string;
+}
 
 export default function ParcoursPage() {
-  const router = useRouter();
   const [parcours, setParcours] = useState<Parcours[]>([]);
   const [loading, setLoading] = useState(true);
-  const [paginationMeta, setPaginationMeta] = useState<PaginationMeta>({
+  const [paginationMeta, setPaginationMeta] = useState({
     page: 1,
     limit: 10,
     total: 0,
@@ -66,10 +74,6 @@ export default function ParcoursPage() {
     }
   };
 
-  const handleView = (id: number) => {
-    router.push(`/dashboard/parcours/${id}`);
-  };
-
   const columns: ColumnDef<Parcours>[] = [
     {
       accessorKey: "id",
@@ -79,24 +83,6 @@ export default function ParcoursPage() {
       cell: ({ row }) => (
         <div className="font-medium w-[60px]">{row.getValue("id")}</div>
       ),
-    },
-    {
-      accessorKey: "imageUrl",
-      header: "Image",
-      cell: ({ row }) => {
-        const imageUrl = row.getValue("imageUrl") as string;
-        return imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={row.original.name}
-            className="h-10 w-16 object-cover rounded"
-          />
-        ) : (
-          <div className="h-10 w-16 bg-gray-100 rounded flex items-center justify-center">
-            <MapPin className="h-4 w-4 text-gray-400" />
-          </div>
-        );
-      },
     },
     {
       accessorKey: "name",
@@ -111,11 +97,6 @@ export default function ParcoursPage() {
       accessorKey: "historicalTheme",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Theme" />
-      ),
-      cell: ({ row }) => (
-        <div className="text-sm text-gray-600">
-          {row.getValue("historicalTheme") || "N/A"}
-        </div>
       ),
     },
     {
@@ -150,7 +131,7 @@ export default function ParcoursPage() {
     {
       accessorKey: "distanceKm",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Distance" />
+        <DataTableColumnHeader column={column} title="Distance (km)" />
       ),
       cell: ({ row }) => {
         return `${row.getValue("distanceKm")} km`;
@@ -159,7 +140,7 @@ export default function ParcoursPage() {
     {
       accessorKey: "estimatedDuration",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Duration" />
+        <DataTableColumnHeader column={column} title="Duration (min)" />
       ),
       cell: ({ row }) => {
         return `${row.getValue("estimatedDuration")} min`;
@@ -178,34 +159,11 @@ export default function ParcoursPage() {
       },
     },
     {
-      accessorKey: "isActive",
-      header: "Status",
-      cell: ({ row }) => {
-        const isActive = row.getValue("isActive") as boolean;
-        return (
-          <Badge variant={isActive ? "default" : "secondary"}>
-            {isActive ? "Active" : "Inactive"}
-          </Badge>
-        );
-      },
-    },
-    {
       id: "actions",
       cell: ({ row }) => {
         const parcours = row.original;
         return (
           <div className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleView(parcours.id);
-              }}
-              title="View details"
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
             <Button
               variant="ghost"
               size="icon"

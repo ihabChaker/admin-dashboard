@@ -125,15 +125,22 @@ export default function UserDetailsPage() {
     return (
       <div className="text-center py-12">
         <p className="text-gray-600">User not found</p>
-        <Button onClick={() => router.push("/dashboard/users")} className="mt-4">
+        <Button
+          onClick={() => router.push("/dashboard/users")}
+          className="mt-4"
+        >
           Back to Users
         </Button>
       </div>
     );
   }
 
-  const totalDistance = activities.reduce((sum, a) => sum + (a.distanceKm || 0), 0);
-  const totalDuration = activities.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
+  const totalDistance = Array.isArray(activities)
+    ? activities.reduce((sum, a) => sum + (a.distanceKm || 0), 0)
+    : 0;
+  const totalDuration = Array.isArray(activities)
+    ? activities.reduce((sum, a) => sum + (a.durationMinutes || 0), 0)
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -149,7 +156,9 @@ export default function UserDetailsPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">User Details</h1>
-            <p className="text-gray-600 mt-1">View user profile and activity history</p>
+            <p className="text-gray-600 mt-1">
+              View user profile and activity history
+            </p>
           </div>
         </div>
       </div>
@@ -196,14 +205,18 @@ export default function UserDetailsPage() {
                 <Trophy className="h-5 w-5 text-gray-500" />
                 <div>
                   <p className="text-sm text-gray-500">Total Points</p>
-                  <p className="font-medium text-blue-600">{user.totalPoints}</p>
+                  <p className="font-medium text-blue-600">
+                    {user.totalPoints}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Award className="h-5 w-5 text-gray-500" />
                 <div>
                   <p className="text-sm text-gray-500">Role</p>
-                  <Badge variant={user.role === "admin" ? "default" : "secondary"}>
+                  <Badge
+                    variant={user.role === "admin" ? "default" : "secondary"}
+                  >
                     {user.role}
                   </Badge>
                 </div>
@@ -226,7 +239,9 @@ export default function UserDetailsPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Activities</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Activities
+            </CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -240,7 +255,9 @@ export default function UserDetailsPage() {
             <MapPin className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalDistance.toFixed(1)} km</div>
+            <div className="text-2xl font-bold">
+              {totalDistance.toFixed(1)} km
+            </div>
           </CardContent>
         </Card>
 
@@ -337,13 +354,16 @@ export default function UserDetailsPage() {
                   <TableRow key={activity.id}>
                     <TableCell className="font-medium">{activity.id}</TableCell>
                     <TableCell>
-                      {activity.parcours?.name || `Parcours #${activity.parcoursId}`}
+                      {activity.parcours?.name ||
+                        `Parcours #${activity.parcoursId}`}
                     </TableCell>
                     <TableCell>
                       {new Date(activity.startTime).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      {activity.distanceKm ? `${activity.distanceKm.toFixed(1)} km` : "-"}
+                      {activity.distanceKm
+                        ? `${activity.distanceKm.toFixed(1)} km`
+                        : "-"}
                     </TableCell>
                     <TableCell>
                       {activity.durationMinutes

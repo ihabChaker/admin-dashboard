@@ -1,89 +1,26 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import api from '@/lib/api';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Plus, Trash2, Edit, MapPin } from 'lucide-react';
-import { toast } from 'sonner';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
+import { useEffect, useState } from "react";
+import { ColumnDef } from "@tanstack/react-table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Edit, Trash2, Plus, MapPin, QrCode } from "lucide-react";
+import { toast } from "sonner";
+import api from "@/lib/api";
+import { ServerDataTable } from "@/components/server-data-table";
+import { DataTableColumnHeader } from "@/components/data-table";
+import { PointOfInterest } from "@/lib/types";
 
-interface POI {
-  id: number;
-  name: string;
-  description: string;
-  poiType: string;
-  latitude: number;
-  longitude: number;
-  parcoursId: number;
-  orderInParcours: number;
+interface POI extends PointOfInterest {
+  parcours?: {
+    name: string;
+  };
 }
-
-interface Parcours {
-  id: number;
-  name: string;
-}
-
-const formSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  description: z.string().optional(),
-  poiType: z.enum(['bunker', 'blockhaus', 'memorial', 'museum', 'beach', 'monument']),
-  latitude: z.coerce.number().min(-90).max(90),
-  longitude: z.coerce.number().min(-180).max(180),
-  parcoursId: z.coerce.number().positive('Parcours is required'),
-  orderInParcours: z.coerce.number().int().positive(),
-  historicalPeriod: z.string().optional(),
-});
 
 export default function POIPage() {
   const [pois, setPois] = useState<POI[]>([]);
-  const [parcoursList, setParcoursList] = useState<Parcours[]>([]);
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-  const [editingPOI, setEditingPOI] = useState<POI | null>(null);
   const [paginationMeta, setPaginationMeta] = useState({
     page: 1,
     limit: 10,
@@ -93,279 +30,197 @@ export default function POIPage() {
     hasPreviousPage: false,
   });
 
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      poiType: 'monument',
-      latitude: 0,
-      longitude: 0,
-      parcoursId: 0,
-      orderInParcours: 1,
-      historicalPeriod: '',
-    },
-  });
-
-  const fetchData = async (page = 1, limit = paginationMeta.limit) => {
+  const fetchPOIs = async (page = 1, limit = 10) => {
     try {
-      const [poisRes, parcoursRes] = await Promise.all([
-        api.get(`/poi?page=${page}&limit=${limit}`),
-        api.get('/parcours'),
-      ]);
-      setPois(poisRes.data.data || poisRes.data);
-      if (poisRes.data.meta) {
-        setPaginationMeta(poisRes.data.meta);
-      }
-      setParcoursList(parcoursRes.data.data || parcoursRes.data);
+      setLoading(true);
+      const response = await api.get(`/poi?page=${page}&limit=${limit}`);
+      setPois(response.data.data);
+      setPaginationMeta(response.data.meta);
     } catch (error) {
-      console.error('Failed to fetch data', error);
-      toast.error('Failed to fetch data');
+      console.error("Failed to fetch POIs", error);
+      toast.error("Failed to fetch POIs");
+      setPois([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData(1, 10);
+    fetchPOIs(1, 10);
   }, []);
 
-  useEffect(() => {
-    if (!open) {
-      setEditingPOI(null);
-      form.reset({
-        name: '',
-        description: '',
-        poiType: 'monument',
-        latitude: 0,
-        longitude: 0,
-        parcoursId: 0,
-        orderInParcours: 1,
-        historicalPeriod: '',
-      });
-    }
-  }, [open, form]);
-
-  const handleEdit = (poi: POI) => {
-    setEditingPOI(poi);
-    form.reset({
-      name: poi.name,
-      description: poi.description,
-      poiType: poi.poiType as any,
-      latitude: poi.latitude,
-      longitude: poi.longitude,
-      parcoursId: poi.parcoursId,
-      orderInParcours: poi.orderInParcours,
-      historicalPeriod: '', // Assuming this might be missing or needs fetching
-    });
-    setOpen(true);
-  };
-
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      if (editingPOI) {
-        await api.put(`/poi/${editingPOI.id}`, values);
-        toast.success('POI updated successfully');
-      } else {
-        await api.post('/poi', values);
-        toast.success('POI created successfully');
-      }
-      setOpen(false);
-      fetchData();
-    } catch (error) {
-      console.error('Failed to save POI', error);
-      toast.error(editingPOI ? 'Failed to update POI' : 'Failed to create POI');
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this POI?')) return;
-    
-    try {
-      await api.delete(`/poi/${id}`);
-      toast.success('POI deleted successfully');
-      fetchData();
-    } catch (error) {
-      console.error('Failed to delete POI', error);
-      toast.error('Failed to delete POI');
-    }
-  };
-
   const handlePageChange = (page: number) => {
-    fetchData(page, paginationMeta.limit);
+    fetchPOIs(page, paginationMeta.limit);
   };
 
   const handlePageSizeChange = (pageSize: number) => {
-    setPaginationMeta({ ...paginationMeta, limit: pageSize, page: 1 });
-    fetchData(1, pageSize);
+    fetchPOIs(1, pageSize);
   };
 
-  if (loading) {
-    return <div className="p-8">Loading points of interest...</div>;
-  }
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this POI?")) return;
+
+    try {
+      await api.delete(`/poi/${id}`);
+      toast.success("POI deleted successfully");
+      fetchPOIs(paginationMeta.page, paginationMeta.limit);
+    } catch (error) {
+      console.error("Failed to delete POI", error);
+      toast.error("Failed to delete POI");
+    }
+  };
+
+  const columns: ColumnDef<POI>[] = [
+    {
+      accessorKey: "id",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="ID" />
+      ),
+      cell: ({ row }) => (
+        <div className="font-medium w-[60px]">{row.getValue("id")}</div>
+      ),
+    },
+    {
+      accessorKey: "name",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Name" />
+      ),
+      cell: ({ row }) => {
+        const poi = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-blue-500" />
+            <div className="flex flex-col">
+              <span className="font-medium">{poi.name}</span>
+              <span className="text-xs text-muted-foreground">
+                {Number(poi.latitude).toFixed(4)},{" "}
+                {Number(poi.longitude).toFixed(4)}
+              </span>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "poiType",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Type" />
+      ),
+      cell: ({ row }) => {
+        const type = row.getValue("poiType") as string;
+        return (
+          <Badge variant="outline" className="capitalize">
+            {type}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "parcoursId",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Parcours ID" />
+      ),
+    },
+    {
+      accessorKey: "orderInParcours",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Order" />
+      ),
+      cell: ({ row }) => {
+        return `#${row.getValue("orderInParcours")}`;
+      },
+    },
+    {
+      accessorKey: "qrCode",
+      header: "QR Code",
+      cell: ({ row }) => {
+        const qrCode = row.original.qrCode;
+        return qrCode ? (
+          <Badge variant="default" className="bg-green-100 text-green-700">
+            <QrCode className="h-3 w-3 mr-1" />
+            Generated
+          </Badge>
+        ) : (
+          <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+            None
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "quiz",
+      header: "Quiz",
+      cell: ({ row }) => {
+        const quiz = row.original.quiz;
+        return quiz ? (
+          <Badge
+            variant="outline"
+            className="bg-purple-50 text-purple-700 border-purple-200"
+          >
+            {quiz.title}
+          </Badge>
+        ) : (
+          <span className="text-gray-400 text-sm">-</span>
+        );
+      },
+    },
+    {
+      accessorKey: "podcast",
+      header: "Podcast",
+      cell: ({ row }) => {
+        const podcast = row.original.podcast;
+        return podcast ? (
+          <Badge
+            variant="outline"
+            className="bg-orange-50 text-orange-700 border-orange-200"
+          >
+            {podcast.title}
+          </Badge>
+        ) : (
+          <span className="text-gray-400 text-sm">-</span>
+        );
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const poi = row.original;
+        return (
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                toast.info("Edit functionality coming soon");
+              }}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(poi.id);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Points of Interest</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Add POI
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingPOI ? 'Edit Point of Interest' : 'Add New Point of Interest'}</DialogTitle>
-              <DialogDescription>
-                {editingPOI ? 'Update the details of the point of interest.' : 'Add a historical location to a parcours.'}
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="POI name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Description" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="poiType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="bunker">Bunker</SelectItem>
-                            <SelectItem value="blockhaus">Blockhaus</SelectItem>
-                            <SelectItem value="memorial">Memorial</SelectItem>
-                            <SelectItem value="museum">Museum</SelectItem>
-                            <SelectItem value="beach">Beach</SelectItem>
-                            <SelectItem value="monument">Monument</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="historicalPeriod"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Period</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. 1944" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="latitude"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Latitude</FormLabel>
-                        <FormControl>
-                          <Input type="number" step="any" {...field} value={field.value as number} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="longitude"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Longitude</FormLabel>
-                        <FormControl>
-                          <Input type="number" step="any" {...field} value={field.value as number} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="parcoursId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Parcours</FormLabel>
-                        <Select 
-                          onValueChange={(value) => field.onChange(parseInt(value))} 
-                          defaultValue={field.value ? field.value.toString() : undefined}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select parcours" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {parcoursList.map((p) => (
-                              <SelectItem key={p.id} value={p.id.toString()}>
-                                {p.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="orderInParcours"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Order</FormLabel>
-                        <FormControl>
-                          <Input type="number" {...field} value={field.value as number} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <DialogFooter>
-                  <Button type="submit">{editingPOI ? 'Update POI' : 'Create POI'}</Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => toast.info("Add POI functionality coming soon")}>
+          <Plus className="mr-2 h-4 w-4" /> Add POI
+        </Button>
       </div>
 
       <Card>
@@ -373,102 +228,16 @@ export default function POIPage() {
           <CardTitle>All Points of Interest</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-sm text-muted-foreground">
-              Showing {Math.min((paginationMeta.page - 1) * paginationMeta.limit + 1, paginationMeta.total)} to{' '}
-              {Math.min(paginationMeta.page * paginationMeta.limit, paginationMeta.total)} of {paginationMeta.total} results
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Rows per page:</span>
-              <Select
-                value={paginationMeta.limit.toString()}
-                onValueChange={(value) => handlePageSizeChange(Number(value))}
-              >
-                <SelectTrigger className="w-[70px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5">5</SelectItem>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[60px]">ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Parcours</TableHead>
-                <TableHead>Order</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pois.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                    No points of interest found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                pois.map((poi) => (
-                  <TableRow key={poi.id}>
-                    <TableCell className="font-medium">{poi.id}</TableCell>
-                    <TableCell className="font-medium">{poi.name}</TableCell>
-                    <TableCell className="capitalize">{poi.poiType}</TableCell>
-                    <TableCell>
-                      {parcoursList.find(p => p.id === poi.parcoursId)?.name || poi.parcoursId}
-                    </TableCell>
-                    <TableCell>{poi.orderInParcours}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(poi)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(poi.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-          <div className="flex items-center justify-center pt-4">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => paginationMeta.hasPreviousPage && handlePageChange(paginationMeta.page - 1)}
-                    className={!paginationMeta.hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                  />
-                </PaginationItem>
-                {Array.from({ length: paginationMeta.totalPages }, (_, i) => i + 1).map((pageNum) => (
-                  <PaginationItem key={pageNum}>
-                    <PaginationLink
-                      onClick={() => handlePageChange(pageNum)}
-                      isActive={pageNum === paginationMeta.page}
-                      className="cursor-pointer"
-                    >
-                      {pageNum}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => paginationMeta.hasNextPage && handlePageChange(paginationMeta.page + 1)}
-                    className={!paginationMeta.hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
+          <ServerDataTable
+            columns={columns}
+            data={pois}
+            paginationMeta={paginationMeta}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            searchKey="name"
+            searchPlaceholder="Search by name..."
+            loading={loading}
+          />
         </CardContent>
       </Card>
     </div>

@@ -51,7 +51,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination';
+} from "@/components/ui/pagination";
 
 interface Battalion {
   id: number;
@@ -80,7 +80,10 @@ interface BattalionRoute {
 
 const battalionFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(200, "Name too long"),
-  country: z.string().min(1, "Country is required").max(100, "Country too long"),
+  country: z
+    .string()
+    .min(1, "Country is required")
+    .max(100, "Country too long"),
   militaryUnit: z.string().max(200).optional(),
   period: z.string().max(100).optional(),
   description: z.string().optional(),
@@ -96,11 +99,15 @@ const routeFormSchema = z.object({
 export default function BattalionPage() {
   const [battalions, setBattalions] = useState<Battalion[]>([]);
   const [routes, setRoutes] = useState<BattalionRoute[]>([]);
-  const [parcoursList, setParcoursList] = useState<any[]>([]);
+  const [parcoursList, setParcoursList] = useState<
+    Array<{ id: number; title: string }>
+  >([]);
   const [loading, setLoading] = useState(true);
   const [openBattalion, setOpenBattalion] = useState(false);
   const [openRoute, setOpenRoute] = useState(false);
-  const [editingBattalion, setEditingBattalion] = useState<Battalion | null>(null);
+  const [editingBattalion, setEditingBattalion] = useState<Battalion | null>(
+    null
+  );
   const [editingRoute, setEditingRoute] = useState<BattalionRoute | null>(null);
   const [battalionPaginationMeta, setBattalionPaginationMeta] = useState({
     page: 1,
@@ -153,7 +160,7 @@ export default function BattalionPage() {
         setBattalionPaginationMeta(battalionsRes.data.meta);
       }
       setParcoursList(parcourRes.data.data || parcourRes.data);
-      
+
       // Fetch routes for all battalions if exists
       if (battalionData.length > 0) {
         await fetchAllRoutesForBattalions(battalionData);
@@ -172,7 +179,9 @@ export default function BattalionPage() {
       const allRoutes: BattalionRoute[] = [];
       for (const battalion of battalionList) {
         try {
-          const res = await api.get(`/historical/routes/battalion/${battalion.id}`);
+          const res = await api.get(
+            `/historical/routes/battalion/${battalion.id}`
+          );
           const routeData = res.data.data || res.data;
           if (Array.isArray(routeData)) {
             allRoutes.push(...routeData);
@@ -247,7 +256,9 @@ export default function BattalionPage() {
     setOpenRoute(true);
   };
 
-  const onSubmitBattalion = async (values: z.infer<typeof battalionFormSchema>) => {
+  const onSubmitBattalion = async (
+    values: z.infer<typeof battalionFormSchema>
+  ) => {
     try {
       if (editingBattalion) {
         await api.put(`/historical/battalions/${editingBattalion.id}`, values);
@@ -260,7 +271,11 @@ export default function BattalionPage() {
       fetchData();
     } catch (error) {
       console.error("Failed to save battalion", error);
-      toast.error(editingBattalion ? "Failed to update battalion" : "Failed to create battalion");
+      toast.error(
+        editingBattalion
+          ? "Failed to update battalion"
+          : "Failed to create battalion"
+      );
     }
   };
 
@@ -278,7 +293,9 @@ export default function BattalionPage() {
       fetchAllRoutes();
     } catch (error) {
       console.error("Failed to save route", error);
-      toast.error(editingRoute ? "Failed to update route" : "Failed to create route");
+      toast.error(
+        editingRoute ? "Failed to update route" : "Failed to create route"
+      );
     }
   };
 
@@ -300,7 +317,11 @@ export default function BattalionPage() {
   };
 
   const handleBattalionPageSizeChange = (pageSize: number) => {
-    setBattalionPaginationMeta({ ...battalionPaginationMeta, limit: pageSize, page: 1 });
+    setBattalionPaginationMeta({
+      ...battalionPaginationMeta,
+      limit: pageSize,
+      page: 1,
+    });
     fetchData(1, pageSize);
   };
 
@@ -328,7 +349,9 @@ export default function BattalionPage() {
           <Shield className="h-8 w-8 text-indigo-600" />
           Historical Battalion Management
         </h1>
-        <p className="text-gray-600 mt-1">Manage WWII battalions and their historical routes</p>
+        <p className="text-gray-600 mt-1">
+          Manage WWII battalions and their historical routes
+        </p>
       </div>
 
       <Tabs defaultValue="battalions" className="w-full">
@@ -368,7 +391,10 @@ export default function BattalionPage() {
                         <FormItem>
                           <FormLabel>Battalion Name *</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., 2nd Ranger Battalion" {...field} />
+                            <Input
+                              placeholder="e.g., 2nd Ranger Battalion"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -381,7 +407,10 @@ export default function BattalionPage() {
                         <FormItem>
                           <FormLabel>Country *</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., USA, UK, France" {...field} />
+                            <Input
+                              placeholder="e.g., USA, UK, France"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -394,7 +423,10 @@ export default function BattalionPage() {
                         <FormItem>
                           <FormLabel>Military Unit</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., US Army Rangers" {...field} />
+                            <Input
+                              placeholder="e.g., US Army Rangers"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -432,7 +464,9 @@ export default function BattalionPage() {
                     />
                     <DialogFooter>
                       <Button type="submit">
-                        {editingBattalion ? "Update Battalion" : "Create Battalion"}
+                        {editingBattalion
+                          ? "Update Battalion"
+                          : "Create Battalion"}
                       </Button>
                     </DialogFooter>
                   </form>
@@ -448,14 +482,30 @@ export default function BattalionPage() {
             <CardContent>
               <div className="flex items-center justify-between mb-4">
                 <div className="text-sm text-muted-foreground">
-                  Showing {Math.min((battalionPaginationMeta.page - 1) * battalionPaginationMeta.limit + 1, battalionPaginationMeta.total)} to{' '}
-                  {Math.min(battalionPaginationMeta.page * battalionPaginationMeta.limit, battalionPaginationMeta.total)} of {battalionPaginationMeta.total} results
+                  Showing{" "}
+                  {Math.min(
+                    (battalionPaginationMeta.page - 1) *
+                      battalionPaginationMeta.limit +
+                      1,
+                    battalionPaginationMeta.total
+                  )}{" "}
+                  to{" "}
+                  {Math.min(
+                    battalionPaginationMeta.page *
+                      battalionPaginationMeta.limit,
+                    battalionPaginationMeta.total
+                  )}{" "}
+                  of {battalionPaginationMeta.total} results
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Rows per page:</span>
+                  <span className="text-sm text-muted-foreground">
+                    Rows per page:
+                  </span>
                   <Select
                     value={battalionPaginationMeta.limit.toString()}
-                    onValueChange={(value) => handleBattalionPageSizeChange(Number(value))}
+                    onValueChange={(value) =>
+                      handleBattalionPageSizeChange(Number(value))
+                    }
                   >
                     <SelectTrigger className="w-[70px]">
                       <SelectValue />
@@ -484,14 +534,19 @@ export default function BattalionPage() {
                 <TableBody>
                   {battalions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      <TableCell
+                        colSpan={6}
+                        className="text-center py-8 text-gray-500"
+                      >
                         No battalions found. Create your first battalion!
                       </TableCell>
                     </TableRow>
                   ) : (
                     battalions.map((battalion) => (
                       <TableRow key={battalion.id}>
-                        <TableCell className="font-medium">{battalion.id}</TableCell>
+                        <TableCell className="font-medium">
+                          {battalion.id}
+                        </TableCell>
                         <TableCell>
                           <div className="font-medium">{battalion.name}</div>
                           {battalion.description && (
@@ -520,7 +575,9 @@ export default function BattalionPage() {
                               variant="ghost"
                               size="icon"
                               className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => handleDeleteBattalion(battalion.id)}
+                              onClick={() =>
+                                handleDeleteBattalion(battalion.id)
+                              }
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -536,11 +593,23 @@ export default function BattalionPage() {
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious
-                        onClick={() => battalionPaginationMeta.hasPreviousPage && handleBattalionPageChange(battalionPaginationMeta.page - 1)}
-                        className={!battalionPaginationMeta.hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        onClick={() =>
+                          battalionPaginationMeta.hasPreviousPage &&
+                          handleBattalionPageChange(
+                            battalionPaginationMeta.page - 1
+                          )
+                        }
+                        className={
+                          !battalionPaginationMeta.hasPreviousPage
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
                       />
                     </PaginationItem>
-                    {Array.from({ length: battalionPaginationMeta.totalPages }, (_, i) => i + 1).map((pageNum) => (
+                    {Array.from(
+                      { length: battalionPaginationMeta.totalPages },
+                      (_, i) => i + 1
+                    ).map((pageNum) => (
                       <PaginationItem key={pageNum}>
                         <PaginationLink
                           onClick={() => handleBattalionPageChange(pageNum)}
@@ -553,8 +622,17 @@ export default function BattalionPage() {
                     ))}
                     <PaginationItem>
                       <PaginationNext
-                        onClick={() => battalionPaginationMeta.hasNextPage && handleBattalionPageChange(battalionPaginationMeta.page + 1)}
-                        className={!battalionPaginationMeta.hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        onClick={() =>
+                          battalionPaginationMeta.hasNextPage &&
+                          handleBattalionPageChange(
+                            battalionPaginationMeta.page + 1
+                          )
+                        }
+                        className={
+                          !battalionPaginationMeta.hasNextPage
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
                       />
                     </PaginationItem>
                   </PaginationContent>
@@ -575,7 +653,9 @@ export default function BattalionPage() {
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                   <DialogTitle>
-                    {editingRoute ? "Edit Historical Route" : "Add New Historical Route"}
+                    {editingRoute
+                      ? "Edit Historical Route"
+                      : "Add New Historical Route"}
                   </DialogTitle>
                   <DialogDescription>
                     {editingRoute
@@ -599,7 +679,9 @@ export default function BattalionPage() {
                               className="w-full rounded-md border border-gray-300 px-3 py-2"
                               {...field}
                               value={field.value as number}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              onChange={(e) =>
+                                field.onChange(parseInt(e.target.value))
+                              }
                               disabled={!!editingRoute}
                             >
                               <option value="">Select a battalion</option>
@@ -625,13 +707,15 @@ export default function BattalionPage() {
                               className="w-full rounded-md border border-gray-300 px-3 py-2"
                               {...field}
                               value={field.value as number}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              onChange={(e) =>
+                                field.onChange(parseInt(e.target.value))
+                              }
                               disabled={!!editingRoute}
                             >
                               <option value="">Select a parcours</option>
                               {parcoursList.map((p) => (
                                 <option key={p.id} value={p.id}>
-                                  {p.name}
+                                  {p.title}
                                 </option>
                               ))}
                             </select>
@@ -700,17 +784,23 @@ export default function BattalionPage() {
                 <TableBody>
                   {routes.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      <TableCell
+                        colSpan={6}
+                        className="text-center py-8 text-gray-500"
+                      >
                         No routes found. Create your first historical route!
                       </TableCell>
                     </TableRow>
                   ) : (
                     routes.map((route) => (
                       <TableRow key={route.id}>
-                        <TableCell className="font-medium">{route.id}</TableCell>
+                        <TableCell className="font-medium">
+                          {route.id}
+                        </TableCell>
                         <TableCell>
                           <div className="font-medium">
-                            {route.battalion?.name || `Battalion #${route.battalionId}`}
+                            {route.battalion?.name ||
+                              `Battalion #${route.battalionId}`}
                           </div>
                           {route.battalion?.country && (
                             <div className="text-xs text-gray-500">
@@ -719,9 +809,12 @@ export default function BattalionPage() {
                           )}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {route.parcours?.name || `Parcours #${route.parcoursId}`}
+                          {route.parcours?.name ||
+                            `Parcours #${route.parcoursId}`}
                         </TableCell>
-                        <TableCell className="text-sm">{route.routeDate}</TableCell>
+                        <TableCell className="text-sm">
+                          {route.routeDate}
+                        </TableCell>
                         <TableCell className="text-sm text-gray-600 max-w-xs">
                           <div className="line-clamp-2">
                             {route.historicalContext || "-"}
