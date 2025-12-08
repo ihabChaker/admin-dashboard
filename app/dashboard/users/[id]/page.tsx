@@ -256,7 +256,7 @@ export default function UserDetailsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {totalDistance.toFixed(1)} km
+              {Number(totalDistance).toFixed(1)} km
             </div>
           </CardContent>
         </Card>
@@ -362,7 +362,7 @@ export default function UserDetailsPage() {
                     </TableCell>
                     <TableCell>
                       {activity.distanceKm
-                        ? `${activity.distanceKm.toFixed(1)} km`
+                        ? `${Number(activity.distanceKm).toFixed(1)} km`
                         : "-"}
                     </TableCell>
                     <TableCell>

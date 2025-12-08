@@ -115,9 +115,9 @@ export default function ParcoursDetailPage() {
       });
 
       toast.success(
-        `GPX uploaded: ${
-          result.waypointsCount
-        } waypoints, ${result.totalDistance?.toFixed(2)} km`
+        `GPX uploaded: ${result.waypointsCount} waypoints, ${Number(
+          result.totalDistance
+        ).toFixed(2)} km`
       );
       fetchParcoursDetails();
     } catch (error) {

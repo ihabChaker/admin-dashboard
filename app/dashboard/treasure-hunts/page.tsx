@@ -69,8 +69,6 @@ interface Parcours {
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  targetObject: z.string().min(1, "Target object is required"),
-  pointsReward: z.coerce.number().int().positive("Points must be positive"),
   isActive: z.boolean().default(true),
   parcoursId: z.coerce.number().positive("Parcours is required"),
   latitude: z.coerce.number().min(-90).max(90),
@@ -101,8 +99,6 @@ export default function TreasureHuntPage() {
     defaultValues: {
       name: "",
       description: "",
-      targetObject: "",
-      pointsReward: 75,
       isActive: true,
       parcoursId: 0,
       latitude: 0,
@@ -140,8 +136,6 @@ export default function TreasureHuntPage() {
       form.reset({
         name: "",
         description: "",
-        targetObject: "",
-        pointsReward: 75,
         isActive: true,
         parcoursId: 0,
         latitude: 0,
@@ -156,8 +150,6 @@ export default function TreasureHuntPage() {
     form.reset({
       name: t.name,
       description: t.description,
-      targetObject: t.targetObject,
-      pointsReward: t.pointsReward,
       isActive: t.isActive,
       parcoursId: t.parcoursId,
       latitude: t.latitude,
@@ -246,19 +238,6 @@ export default function TreasureHuntPage() {
               >
                 <FormField
                   control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Treasure name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
                   name="description"
                   render={({ field }) => (
                     <FormItem>
@@ -270,38 +249,6 @@ export default function TreasureHuntPage() {
                     </FormItem>
                   )}
                 />
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="targetObject"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Target Object</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. Bunker SK15" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="pointsReward"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Points Reward</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            value={field.value as number}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -466,7 +413,6 @@ export default function TreasureHuntPage() {
                 <TableHead>Target</TableHead>
                 <TableHead>Parcours</TableHead>
                 <TableHead>Items</TableHead>
-                <TableHead>Points</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -475,7 +421,7 @@ export default function TreasureHuntPage() {
               {treasures.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={8}
+                    colSpan={7}
                     className="text-center py-8 text-gray-500"
                   >
                     No treasure hunts found.
@@ -486,7 +432,7 @@ export default function TreasureHuntPage() {
                   <TableRow key={t.id}>
                     <TableCell className="font-medium">{t.id}</TableCell>
                     <TableCell className="font-medium">{t.name}</TableCell>
-                    <TableCell>{t.targetObject}</TableCell>
+
                     <TableCell>
                       {parcoursList.find((p) => p.id === t.parcoursId)?.name ||
                         t.parcoursId}
@@ -496,7 +442,6 @@ export default function TreasureHuntPage() {
                         {t.items?.length || 0} items
                       </Badge>
                     </TableCell>
-                    <TableCell>{t.pointsReward}</TableCell>
                     <TableCell>
                       {t.isActive ? (
                         <span className="text-green-600">Active</span>

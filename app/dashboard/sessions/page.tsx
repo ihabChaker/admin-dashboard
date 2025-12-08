@@ -184,7 +184,7 @@ export default function SessionsPage() {
       ),
       cell: ({ row }) => (
         <span className="font-mono">
-          {row.getValue<number>("distanceCoveredKm").toFixed(2)} km
+          {Number(row.getValue<number>("distanceCoveredKm")).toFixed(2)} km
         </span>
       ),
     },
@@ -282,7 +282,7 @@ export default function SessionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.totalDistance.toFixed(1)} km
+              {Number(stats.totalDistance).toFixed(1)} km
             </div>
           </CardContent>
         </Card>

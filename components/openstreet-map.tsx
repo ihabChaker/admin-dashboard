@@ -152,7 +152,8 @@ export function OpenStreetMap({
           <Popup>
             <div className="font-medium">Start Point</div>
             <div className="text-xs text-gray-600">
-              {startPoint.lat.toFixed(6)}, {startPoint.lon.toFixed(6)}
+              {Number(startPoint.lat).toFixed(6)},{" "}
+              {Number(startPoint.lon).toFixed(6)}
             </div>
           </Popup>
         </Marker>
@@ -163,7 +164,8 @@ export function OpenStreetMap({
             <Popup>
               <div className="font-medium">End Point</div>
               <div className="text-xs text-gray-600">
-                {endPoint.lat.toFixed(6)}, {endPoint.lon.toFixed(6)}
+                {Number(endPoint.lat).toFixed(6)},{" "}
+                {Number(endPoint.lon).toFixed(6)}
               </div>
             </Popup>
           </Marker>

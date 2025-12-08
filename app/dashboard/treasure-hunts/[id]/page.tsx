@@ -8,18 +8,15 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   MapPin,
-  Target,
   Gift,
   Trophy,
   QrCode,
   Image as ImageIcon,
-  Play,
-  HelpCircle,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import { TreasureHunt, TreasureItem } from "@/lib/types";
-import { AudioPlayer } from "@/components/audio-player";
 import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
 
@@ -128,25 +125,7 @@ export default function TreasureHuntDetailPage() {
               </div>
             )}
 
-            <div>
-              <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
-                <Target className="h-4 w-4" />
-                Target Object
-              </div>
-              <div className="font-medium">{treasure.targetObject}</div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
-                  <Trophy className="h-4 w-4" />
-                  Points Reward
-                </div>
-                <div className="font-medium text-lg text-amber-600">
-                  {treasure.pointsReward} pts
-                </div>
-              </div>
-
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
@@ -214,11 +193,20 @@ export default function TreasureHuntDetailPage() {
 
       {/* Treasure Items */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Gift className="h-5 w-5" />
             Treasure Items ({items.length})
           </CardTitle>
+          <Button
+            onClick={() =>
+              router.push(`/dashboard/treasure-hunts/${id}/items/new`)
+            }
+            size="sm"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Item
+          </Button>
         </CardHeader>
         <CardContent>
           {items.length > 0 ? (
@@ -232,7 +220,7 @@ export default function TreasureHuntDetailPage() {
                     {item.imageUrl ? (
                       <img
                         src={item.imageUrl}
-                        alt={item.name}
+                        alt={item.itemName}
                         className="w-20 h-20 object-cover rounded"
                       />
                     ) : (
@@ -241,56 +229,56 @@ export default function TreasureHuntDetailPage() {
                       </div>
                     )}
                     <div className="flex-1">
-                      <div className="font-medium text-lg">{item.name}</div>
+                      <div className="font-medium text-lg">{item.itemName}</div>
                       {item.description && (
                         <div className="text-sm text-gray-600 mt-1">
                           {item.description}
                         </div>
                       )}
-                      <div className="mt-2">
+                      <div className="mt-2 flex items-center gap-2">
                         <Badge className="bg-amber-100 text-amber-700">
-                          {item.points} points
+                          {item.pointsValue} points
                         </Badge>
                       </div>
-
-                      {/* Quiz Association */}
-                      {item.quiz && (
-                        <div className="mt-3 p-3 bg-purple-50 rounded border border-purple-200">
-                          <div className="flex items-center gap-2 text-purple-700 font-medium mb-1">
-                            <HelpCircle className="h-4 w-4" />
-                            Quiz: {item.quiz.title}
+                      {item.qrCode && (
+                        <div className="mt-3 p-3 bg-gray-50 rounded border border-gray-200">
+                          <div className="text-xs font-semibold text-gray-700 mb-2">
+                            QR Code:
                           </div>
-                          {item.quiz.description && (
-                            <div className="text-xs text-purple-600">
-                              {item.quiz.description}
-                            </div>
-                          )}
-                          {item.quiz.questions && (
-                            <div className="text-xs text-purple-600 mt-1">
-                              {item.quiz.questions.length} questions
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Podcast Association */}
-                      {item.podcast && (
-                        <div className="mt-3 p-3 bg-orange-50 rounded border border-orange-200">
-                          <div className="flex items-center gap-2 text-orange-700 font-medium mb-2">
-                            <Play className="h-4 w-4" />
-                            Podcast: {item.podcast.title}
+                          <div className="font-mono text-xs break-all text-gray-600 mb-2">
+                            {item.qrCode}
                           </div>
-                          <AudioPlayer
-                            src={item.podcast.audioFileUrl}
-                            title={item.podcast.title}
-                          />
-                          <div className="text-xs text-orange-600 mt-2">
-                            Duration:{" "}
-                            {Math.floor(item.podcast.durationSeconds / 60)}:
-                            {(item.podcast.durationSeconds % 60)
-                              .toString()
-                              .padStart(2, "0")}{" "}
-                            • Narrator: {item.podcast.narrator}
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                if (item.qrCode) {
+                                  navigator.clipboard.writeText(item.qrCode);
+                                  alert("QR Code copied to clipboard!");
+                                }
+                              }}
+                              className="text-xs"
+                            >
+                              Copy Code
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                if (item.qrCode) {
+                                  window.open(
+                                    `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(
+                                      item.qrCode
+                                    )}`,
+                                    "_blank"
+                                  );
+                                }
+                              }}
+                              className="text-xs"
+                            >
+                              Print QR Code
+                            </Button>
                           </div>
                         </div>
                       )}

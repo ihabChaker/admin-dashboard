@@ -70,6 +70,10 @@ export default function ParcoursPage() {
     router.push(`/dashboard/parcours/${id}`);
   };
 
+  const handleEdit = (id: number) => {
+    router.push(`/dashboard/parcours/${id}/edit`);
+  };
+
   const columns: ColumnDef<Parcours>[] = [
     {
       accessorKey: "id",
@@ -211,7 +215,7 @@ export default function ParcoursPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation();
-                toast.info("Edit functionality coming soon");
+                handleEdit(parcours.id);
               }}
             >
               <Edit className="h-4 w-4" />
@@ -239,9 +243,7 @@ export default function ParcoursPage() {
         <h1 className="text-3xl font-bold text-gray-900">
           Parcours Management
         </h1>
-        <Button
-          onClick={() => toast.info("Add parcours functionality coming soon")}
-        >
+        <Button onClick={() => router.push("/dashboard/parcours/new")}>
           <Plus className="mr-2 h-4 w-4" /> Add Parcours
         </Button>
       </div>

@@ -15,7 +15,6 @@ import {
   Mic,
   Target,
   Award,
-  Shield,
   Activity,
   TrendingUp,
   Play,
@@ -79,27 +78,6 @@ export default function DashboardLayout({
             Users
           </Link>
           <Link
-            href="/dashboard/activities"
-            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
-          >
-            <Activity size={20} />
-            User Activities
-          </Link>
-          <Link
-            href="/dashboard/sessions"
-            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
-          >
-            <Play size={20} />
-            Parcours Sessions
-          </Link>
-          <Link
-            href="/dashboard/leaderboard"
-            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
-          >
-            <TrendingUp size={20} />
-            Leaderboard
-          </Link>
-          <Link
             href="/dashboard/parcours"
             className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
           >
@@ -154,13 +132,6 @@ export default function DashboardLayout({
           >
             <Trophy size={20} />
             Rewards
-          </Link>
-          <Link
-            href="/dashboard/battalion"
-            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
-          >
-            <Shield size={20} />
-            Historical Data
           </Link>
         </nav>
         <div className="p-4 border-t border-gray-800">

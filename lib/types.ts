@@ -87,11 +87,9 @@ export interface TreasureHunt {
   parcoursId: number;
   name: string;
   description?: string;
-  targetObject: string;
   latitude: number;
   longitude: number;
   scanRadiusMeters: number;
-  pointsReward: number;
   qrCode?: string;
   isActive: boolean;
   items?: TreasureItem[];
@@ -101,14 +99,11 @@ export interface TreasureHunt {
 export interface TreasureItem {
   id: number;
   treasureHuntId: number;
-  name: string;
+  itemName: string;
   description?: string;
   imageUrl?: string;
-  points: number;
-  quizId?: number;
-  podcastId?: number;
-  quiz?: Quiz;
-  podcast?: Podcast;
+  pointsValue: number;
+  qrCode?: string;
   createdAt: string;
 }
 

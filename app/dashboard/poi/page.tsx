@@ -1,16 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Plus, MapPin, QrCode } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Edit,
+  Trash2,
+  Plus,
+  MapPin,
+  QrCode,
+  Download,
+  Printer,
+} from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import { ServerDataTable } from "@/components/server-data-table";
 import { DataTableColumnHeader } from "@/components/data-table";
 import { PointOfInterest } from "@/lib/types";
+import QRCodeLib from "qrcode";
 
 interface POI extends PointOfInterest {
   parcours?: {
@@ -19,8 +35,13 @@ interface POI extends PointOfInterest {
 }
 
 export default function POIPage() {
+  const router = useRouter();
   const [pois, setPois] = useState<POI[]>([]);
   const [loading, setLoading] = useState(true);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [paginationMeta, setPaginationMeta] = useState({
     page: 1,
     limit: 10,
@@ -68,6 +89,107 @@ export default function POIPage() {
       console.error("Failed to delete POI", error);
       toast.error("Failed to delete POI");
     }
+  };
+
+  const handleEdit = (id: number) => {
+    router.push(`/dashboard/poi/${id}/edit?id=${id}`);
+  };
+
+  const handleViewQR = async (poi: POI) => {
+    if (!poi.qrCode) {
+      toast.error("This POI doesn't have a QR code");
+      return;
+    }
+
+    setSelectedPOI(poi);
+    setQrDialogOpen(true);
+
+    // Generate QR code
+    try {
+      const dataUrl = await QRCodeLib.toDataURL(poi.qrCode, {
+        width: 300,
+        margin: 2,
+        errorCorrectionLevel: "H",
+      });
+      setQrDataUrl(dataUrl);
+    } catch (error) {
+      console.error("QR generation error:", error);
+      toast.error("Failed to generate QR code");
+    }
+  };
+
+  const handleDownloadQR = () => {
+    if (!qrDataUrl || !selectedPOI) return;
+
+    const link = document.createElement("a");
+    link.download = `qr-${selectedPOI.name
+      .replace(/\s+/g, "-")
+      .toLowerCase()}.png`;
+    link.href = qrDataUrl;
+    link.click();
+    toast.success("QR code downloaded");
+  };
+
+  const handlePrintQR = () => {
+    if (!qrDataUrl || !selectedPOI) return;
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>QR Code - ${selectedPOI.name}</title>
+          <style>
+            body { 
+              display: flex; 
+              flex-direction: column;
+              align-items: center; 
+              justify-content: center; 
+              min-height: 100vh;
+              margin: 0;
+              font-family: Arial, sans-serif;
+            }
+            .qr-container {
+              text-align: center;
+              padding: 40px;
+            }
+            img { 
+              max-width: 100%; 
+              height: auto; 
+            }
+            h2 {
+              margin-top: 20px;
+              font-size: 24px;
+              color: #333;
+            }
+            p {
+              margin-top: 10px;
+              font-size: 14px;
+              color: #666;
+            }
+            @media print {
+              body { margin: 0; }
+              .qr-container { page-break-after: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="qr-container">
+            <img src="${qrDataUrl}" alt="QR Code" />
+            <h2>${selectedPOI.name}</h2>
+            <p>${selectedPOI.qrCode}</p>
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              window.onafterprint = function() { window.close(); };
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   const columns: ColumnDef<POI>[] = [
@@ -131,68 +253,32 @@ export default function POIPage() {
       },
     },
     {
-      accessorKey: "qrCode",
-      header: "QR Code",
-      cell: ({ row }) => {
-        const qrCode = row.original.qrCode;
-        return qrCode ? (
-          <Badge variant="default" className="bg-green-100 text-green-700">
-            <QrCode className="h-3 w-3 mr-1" />
-            Generated
-          </Badge>
-        ) : (
-          <Badge variant="secondary" className="bg-gray-100 text-gray-600">
-            None
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: "quiz",
-      header: "Quiz",
-      cell: ({ row }) => {
-        const quiz = row.original.quiz;
-        return quiz ? (
-          <Badge
-            variant="outline"
-            className="bg-purple-50 text-purple-700 border-purple-200"
-          >
-            {quiz.title}
-          </Badge>
-        ) : (
-          <span className="text-gray-400 text-sm">-</span>
-        );
-      },
-    },
-    {
-      accessorKey: "podcast",
-      header: "Podcast",
-      cell: ({ row }) => {
-        const podcast = row.original.podcast;
-        return podcast ? (
-          <Badge
-            variant="outline"
-            className="bg-orange-50 text-orange-700 border-orange-200"
-          >
-            {podcast.title}
-          </Badge>
-        ) : (
-          <span className="text-gray-400 text-sm">-</span>
-        );
-      },
-    },
-    {
       id: "actions",
+      header: "Actions",
       cell: ({ row }) => {
         const poi = row.original;
         return (
           <div className="flex justify-end gap-2">
+            {poi.qrCode && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewQR(poi);
+                }}
+                title="View QR Code"
+              >
+                <QrCode className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
               onClick={(e) => {
                 e.stopPropagation();
-                toast.info("Edit functionality coming soon");
+                handleEdit(poi.id);
               }}
             >
               <Edit className="h-4 w-4" />
@@ -218,7 +304,7 @@ export default function POIPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Points of Interest</h1>
-        <Button onClick={() => toast.info("Add POI functionality coming soon")}>
+        <Button onClick={() => router.push("/dashboard/poi/new")}>
           <Plus className="mr-2 h-4 w-4" /> Add POI
         </Button>
       </div>
@@ -240,6 +326,42 @@ export default function POIPage() {
           />
         </CardContent>
       </Card>
+
+      <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>QR Code - {selectedPOI?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center space-y-4 py-4">
+            {qrDataUrl && (
+              <>
+                <img
+                  src={qrDataUrl}
+                  alt="QR Code"
+                  className="w-64 h-64 border-2 border-gray-200 rounded"
+                />
+                <p className="text-sm text-gray-600 font-mono">
+                  {selectedPOI?.qrCode}
+                </p>
+                <div className="flex gap-2 w-full">
+                  <Button
+                    onClick={handleDownloadQR}
+                    className="flex-1"
+                    variant="outline"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                  <Button onClick={handlePrintQR} className="flex-1">
+                    <Printer className="h-4 w-4 mr-2" />
+                    Print
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
