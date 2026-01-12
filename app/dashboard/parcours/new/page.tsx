@@ -159,9 +159,11 @@ export default function ParcoursFormPage() {
       };
 
       if (isEdit) {
+        console.log("Updating parcours with payload:", payload);
         await api.put(`/parcours/${parcoursId}`, payload);
         toast.success("Parcours updated successfully");
       } else {
+        console.log("Creating parcours with payload:", payload);
         await api.post("/parcours", payload);
         toast.success("Parcours created successfully");
       }
@@ -169,7 +171,13 @@ export default function ParcoursFormPage() {
       router.push("/dashboard/parcours");
     } catch (error: any) {
       console.error("Error saving parcours:", error);
-      toast.error(error.response?.data?.message || "Failed to save parcours");
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to save parcours";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
